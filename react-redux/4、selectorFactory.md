@@ -100,6 +100,7 @@ export function pureFinalPropsSelectorFactory(
   }
   // 只有展示型自身的Props变更
   function handleNewProps() {
+    // mapStateToProps 是否依赖于组件本身的props  (来源未知，后面补上)
     if (mapStateToProps.dependsOnOwnProps)
       stateProps = mapStateToProps(state, ownProps)
 
