@@ -18,6 +18,16 @@
 ### shallowEqual 
     浅比较方法
 ```javascript {.line-number}
+const hasOwn = Object.prototype.hasOwnProperty
+
+function is(x, y) {
+  if (x === y) {
+    return x !== 0 || y !== 0 || 1 / x === 1 / y
+  } else {
+    return x !== x && y !== y
+  }
+}
+
 export default function shallowEqual(objA, objB) {
   if (is(objA, objB)) return true
 
@@ -85,6 +95,7 @@ export function createConnect({
       ...extraOptions                      // 这里面的配置从connectAdvanced去看
     } = {}
   ) {
+    // 这3个通过下面的connectHOC传给selectorFactory   即mapStateToProps...
     const initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps')
     const initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps')
     const initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps')
@@ -94,9 +105,11 @@ export function createConnect({
       methodName: 'connect',
 
       getDisplayName: name => `Connect(${name})`,
+
       // 根据后面的传入mapStateToProps 是否监听store state， 如果不传就不监听
       shouldHandleStateChanges: Boolean(mapStateToProps),
 
+      // 传个selectorFactory的参数
       initMapStateToProps,
       initMapDispatchToProps,
       initMergeProps,
