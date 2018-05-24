@@ -2,7 +2,7 @@
 
 
 ### 知识点
-* `getChildContent()`  除了官方文档还可以看[这里](https://github.com/brunoyang/blog/issues/9)
+* `getChildContext()`  除了官方文档还可以看[这里](https://github.com/brunoyang/blog/issues/9)
   **context**就是一组属性的集合，并被 **隐式** 的传递给后代
   _使用方法_ 使用 `getChildContext` 方法将属性传递给子组件，并使用`childContextTypes`声明传递数据类型，子组件中需要显示的使用 `contextTypes`声明需要用到的属性的数据类型。同时，需要在子组件里的`constructor`的参数里传进`context`，并使用`super`继承
 

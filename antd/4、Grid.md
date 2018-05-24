@@ -137,6 +137,10 @@ export default class Row extends React.Component<RowProps, RowState> {
       [`${prefixCls}-${type}-${justify}`]: type && justify,
       [`${prefixCls}-${type}-${align}`]: type && align,
     }, className);
+    // gutter表示间距，实现原理是外层div左右两端包的padding
+    // 这样有个问题就是第一个Col 会多出一个padding-left 最后一个Col会多出一个padding-right
+    // 这里是解决办法 就是让Row 左右两边加2个负的margin
+    // 这里参考了 markzzw的[博客](https://juejin.im/post/59e4cdeef265da43070254f9)
     const rowStyle = (gutter as number) > 0 ? {
       marginLeft: (gutter as number) / -2,
       marginRight: (gutter as number) / -2,
