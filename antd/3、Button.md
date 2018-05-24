@@ -226,3 +226,17 @@ const ButtonGroup: React.SFC<ButtonGroupProps> = (props) => {
   return <div {...others} className={classes} />;
 };
 ```
+
+根据上面的写法 有两种方法可以
+```js
+// 一、这个可以直接渲染里面的子组件
+<div>{this.props.children}</div>
+
+// 二、这里放others也可以渲染出子组件。但是不能直接放 this.props.children
+render(){
+  const { propsA, propsB, ...others } = this.props
+  return (
+    <div {...others} />
+  )
+}
+```
