@@ -2,6 +2,17 @@
 
 ## Button 组件
 
+### 知识点
+
+* React.Children [官网](http://www.css88.com/react/docs/react-api.html#react.children)
+  一共5个api
+  * `React.Children.map(children, (v)=>{})`
+  * `React.Children.forEach(children, (v)=>{})`
+  * `React.Children.count(children)` 返回`children`中的组件总数，等于是`map`或者`forEach`调用次数
+  * `React.Children.only(children)`  返回 `children` 中的唯一子集
+  * `React.Children.toArray(children)` 将 `children` 不透明数据结构作为一个平面数组返回，并且 key 分配给每个子集。 如果你想在渲染方法中操作`children`集合，特别是如果你想在传递它之前重新排序或切割 `this.props.children` ，这将非常有用。
+
+
 #### index.tsx
 把Group挂在Button上作为属性调用
 ```js
@@ -180,7 +191,7 @@ export default class Button extends React.Component<ButtonProps, any> {
     const iconNode = iconType ? <Icon type={iconType} /> : null;
     // kids 处理
     const kids = (children || children === 0)
-      // 这里的map 遍历子元素  但是这个map写法看不懂
+      // 这里的map 遍历子元素 
       ? React.Children.map(children, child => insertSpace(child, this.isNeedInserted())) : null;
 
     return (
