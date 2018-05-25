@@ -27,6 +27,15 @@ export default function createStore( reducers, preloadedState, enhancer ) {
     enhancer = preloadedState
     preloadedState = undefined
   }
+  // 如果有中间件
+  if (typeof enhancer !== 'undefined') {
+    if (typeof enhancer !== 'function') {
+      throw new Error('Expected the enhancer to be a function.')
+    }
+    // 这一行  决定了 applyMiddleware里的传参方式 往下看 applyMiddleware部分
+    return enhancer(createStore)(reducer, preloadedState)
+  }
+
   // ...  一些防错
   // 返回5个主要函数 
   return {
@@ -455,7 +464,10 @@ export default function combineReducers(reducers) {
 
 ### compose
 
-  > 这个知识点在于 纯函数 的理解
+  > 这个知识点在于 纯函数 的理解 作者在这用注释解释了这个函数的作用
+  >  For example, compose(f, g, h) is identical to doing (...args) => f(g(h(...args))).  
+  
+  *深入的了解需要去看 **函数式编程** 的知识*
 
 ```js
 export default function compose(...funcs) {
@@ -466,8 +478,82 @@ export default function compose(...funcs) {
   if (funcs.length === 1) {
     return funcs[0]
   }
-
+  // 注意 这里是 从右往左执行，也是从后往前执行，这个和纯函数一样
   return funcs.reduce((a, b) => (...args) => a(b(...args)))
 }
 
 ```
+
+
+### applyMiddleware 
+
+  最后一个啦 坚持坚持！ 直接把作者的 注释参数考过来吧 
+
+  > @param {...Function} middlewares The middleware chain to be applied.
+  > @returns {Function} A store enhancer applying the middleware.
+
+  关于中间件的代码阅读，需要深刻理解 applyMiddleware的道理借鉴了这个[博客](http://www.cnblogs.com/cloud-/p/7284136.html)
+  而关于中间件的参数在这里 [思否](https://segmentfault.com/a/1190000011766686)
+  感谢各位大神分享！
+
+```js
+export default function applyMiddleware(...middlewares) {
+  return createStore => (...args) => {
+    // 这里又回到了 createStore的三个参数 (reducers, prevState, enhancers)
+    // 请看createStore这一行代码 ↓
+    // return enhancer(createStore)(reducer, preloadedState)
+    // 所以 applyMiddlewar 的形式其实是 applyMiddleware(...middlewares)(createStore)(reducer, preloadedState)
+    const store = createStore(...args)
+    let dispatch = () => {
+      throw new Error(
+        `Dispatching while constructing your middleware is not allowed. ` +
+          `Other middleware would not be applied to this dispatch.`
+      )
+    }
+    let chain = []
+
+    // 这就是为什么 中间件 都有getState 和 dispatch
+    const middlewareAPI = {
+      getState: store.getState,
+      // 这就是 把store里面的dispatch赋给这个dispatch
+      dispatch: (...args) => dispatch(...args)
+    }
+    // 给每一个中间件都传递 这个参数
+    chain = middlewares.map(middleware => middleware(middlewareAPI))
+    // 这个store.dispatch 就是第一个中间件的next
+    dispatch = compose(...chain)(store.dispatch)
+
+    // 返回了store里面的几个api  ，但是这里的 dispatch已经被改过了
+    return {
+      ...store,
+      dispatch
+    }
+  }
+}
+```
+
+
+这里吧 redux-thunk[源码]()放上来，作为上面的applyMiddleware的栗子
+
+```js
+function createThunkMiddleware(extraArgument) {
+  // 1、 store里的两个api
+  // 2、 中间件通过next 执行下一个中间件，没有next下一个中间件就不会执行。这个next，其实就是被之前其他的中间件强化过的 dispatch ，并且作为参数传递下去
+  // 3、 action 其实就是 dispatch里的那个 action，必须带type的那个action
+  return ({ dispatch, getState }) => next => action => {
+    if (typeof action === 'function') {
+      return action(dispatch, getState, extraArgument);
+    }
+
+    return next(action);
+  };
+}
+
+const thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+export default thunk;
+```
+
+
+**以上就是在下对redux的分析啦，欢迎各位大佬批评指正，也欢迎star！！！**
