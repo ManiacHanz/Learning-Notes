@@ -521,6 +521,7 @@ export default function applyMiddleware(...middlewares) {
     // 给每一个中间件都传递 这个参数
     chain = middlewares.map(middleware => middleware(middlewareAPI))
     // 这个store.dispatch 就是第一个中间件的next
+    // 因为 compose函数的作用就是 返回一个 mid1(mid2(mid3( store.dispatch )))
     dispatch = compose(...chain)(store.dispatch)
 
     // 返回了store里面的几个api  ，但是这里的 dispatch已经被改过了
