@@ -2,7 +2,7 @@
 # index入口文件
 
 
-> 参考了掘金的这篇[文章](https://juejin.im/entry/594770295c497d006bf426e6)
+> 参考了掘金的这篇[文章](https://juejin.im/entry/594770295c497d006bf426e6)，侵删
 
 ### 其实就是暴露了5个核心函数，也就是redux提供的核心api
 ```js
@@ -57,7 +57,7 @@ export default function createStore( reducers, preloadedState, enhancer ) {
   }
 ```
 
-#### getState
+### getState
   简单的返回当前的state
 _______
 
@@ -74,8 +74,29 @@ _______
   }
 ```
 
-#### subscribe
-  订阅函数 -- 即注册listener，store里面的state改变以后，执行该listener
+### subscribe
+
+  *在react-redux里已经通过connect内部订阅，mapStateToProps*
+
+  订阅函数 -- 每次更新分为两个部分，1、`dispatch`一个`action`通过`reducer`导致数据更新，2、触发一个`listener`导致View更新。`subscribe`的作用就是不需要每次`dispatch`以后都去调用listener。即注册`listener`，`store`里面的`state`改变以后，执行该`listener`(listeners就是可以让View更新的函数，最简单的就是`render`或者是组件的`setState`方法)
+
+  举个[栗子](http://www.ruanyifeng.com/blog/2016/09/redux_tutorial_part_one_basic_usages.html)
+```js
+const Counter = ({ value }) => (
+  <h1>{value}</h1>
+);
+
+const render = () => {
+  ReactDOM.render(
+    <Counter value={store.getState()}/>,
+    document.getElementById('root')
+  );
+};
+
+store.subscribe(render);
+render();
+```
+来看源码
 ________
 ```js
 // 传的监听函数进去 返回的注销监听函数
@@ -101,7 +122,7 @@ function subscribe(listener) {
 }
 ```
 
-#### dispatch 发布
+### dispatch 发布
   唯一触发state改变的函数
   源码这里有很长的一段注释，大概意思是 `reducer` 会被当前的state tree已经传入的 `action` 调用。 返回的值会被认为是新的state tree（让reducer成为纯函数的意思），同时监听函数listeners会被通知到。同时作者表示`dispatch`这里传入的 `action`只能是个普通对象，如果需要异步等等，就自己使用中间件去加强dispatch
 
@@ -148,7 +169,7 @@ function dispatch(action) {
 ```
 
 
-#### replaceReducer 
+### replaceReducer 
   替换当前的reducer函数
 ```js
   function replaceReducer(nextReducer) {
@@ -181,7 +202,7 @@ function dispatch(action) {
   }
 ```
 
-#### observable
+### observable
   配合其他库使用的
 
   > observable 是为了配合 Rxjs 这样 observable/reactive 库，不久的将来 EMCAScript 可能会支持原生的 observable/reactive 对象
@@ -225,6 +246,228 @@ function observable() {
 
 最后执行以下初始化 `dispatch({ type: ActionTypes.INIT })`
 
-至此 最主要的`createStore`核心结束
+至此 最主要的`createStore`核心结束，剩下的源码都很短啦
 
 _____________
+
+
+### bindActionCreators
+
+  *如果使用过`Vuex`的话，就可以理解成`...mapMutations`导出来的`mutation`不需要用`store.commit`来触发一样*
+
+  还是举个栗子
+```js
+// actions.js
+function addTodo(text) {
+  return {
+    type: 'ADD_TODO',
+    text
+  }
+}
+
+function removeTodo(id) {
+  return {
+    type: 'REMOVE_TODO',
+    id
+  }
+}
+
+const actions = { addTodo, removeTodo }
+
+// App.js
+class App extends Component {
+  render() {
+    const { visibleTodos, visibilityFilter, actions } = this.props
+    return (
+      <div>
+        <AddTodo
+          onAddClick={text =>
+            actions.addTodo(text)
+          }/>
+        <TodoList
+          todos={visibleTodos}
+          onTodoClick={index =>
+            actions.completeTodo(index)
+          }/>
+        <Footer
+          filter={visibilityFilter}
+          onFilterChange={nextFilter =>
+            actions.setVisibilityFilter(nextFilter)
+          }/>
+      </div>
+    )
+  }
+}
+
+function mapDispatchToProps(dispatch, a) {
+  return { actions: bindActionCreators(actions, dispatch) }
+}
+
+const FinalApp = connect(select, mapDispatchToProps)(App)
+
+ReactDOM.render(
+  <Provider store={createStore(reducer)}>
+    <FinalApp />
+  </Provider>,
+  document.getElementById('app')
+)
+```
+
+  这个函数的作用，就是把普通的 `action` 就是我们自己定义的，转换成一个报过了`dispatch`的`action`，这样在组件中直接调用这个返回的新的 `action`，而不用去使用`store.dispatch`来调用`action`，这样做的好处是react和redux分离。
+
+```js
+function bindActionCreator(actionCreator, dispatch) {
+  return function() {
+    // 这里要吧原来的actionCreator的参数带进来
+    return dispatch(actionCreator.apply(this, arguments))
+  }
+}
+export default function bindActionCreators(actionCreators, dispatch) {
+  if (typeof actionCreators === 'function') {
+    return bindActionCreator(actionCreators, dispatch)
+  }
+
+  if (typeof actionCreators !== 'object' || actionCreators === null) {
+    throw new Error(
+      `bindActionCreators expected an object or a function, instead received ${
+        actionCreators === null ? 'null' : typeof actionCreators
+      }. ` +
+        `Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?`
+    )
+  }
+  // 拿到 actionName: addTodo removeTodo
+  const keys = Object.keys(actionCreators)
+  // 这样最终返回的也只是一个对象
+  const boundActionCreators = {}
+  for (let i = 0; i < keys.length; i++) {
+    // 第一次执行key = addTodo(string)
+    const key = keys[i]
+    const actionCreator = actionCreators[key]
+    if (typeof actionCreator === 'function') {
+      boundActionCreators[key] = bindActionCreator(actionCreator, dispatch)
+    }
+  }
+  return boundActionCreators
+}
+```
+
+_____
+
+### combineReducers
+
+  顾名思义，就是把多个 `reducer` 合并到一个 `reducer` 里，并且把他们的结果合并到一个 `state` 里。这也是为什么， `reducer`在 `default`里面需要返回一个 `initState` 
+
+栗子
+```js
+function a(state, action) {}
+function b(state, action) {}
+
+const reducer = combineReducers({
+  a,
+  b
+})
+```
+
+源码
+```js
+export default function combineReducers(reducers) {
+  // [a, b]
+  const reducerKeys = Object.keys(reducers)
+  const finalReducers = {}
+  for (let i = 0; i < reducerKeys.length; i++) {
+    const key = reducerKeys[i]
+
+    if (process.env.NODE_ENV !== 'production') {
+      if (typeof reducers[key] === 'undefined') {
+        warning(`No reducer provided for key "${key}"`)
+      }
+    }
+
+    if (typeof reducers[key] === 'function') {
+      finalReducers[key] = reducers[key]
+    }
+  }
+  // [a,b]
+  const finalReducerKeys = Object.keys(finalReducers)
+
+  let unexpectedKeyCache
+  if (process.env.NODE_ENV !== 'production') {
+    unexpectedKeyCache = {}
+  }
+
+  let shapeAssertionError
+  try {
+    // 如果没有给reducer初始化状态，使用默认的initAction来初始化reducer的状态
+    assertReducerShape(finalReducers)
+  } catch (e) {
+    shapeAssertionError = e
+  }
+
+  return function combination(state = {}, action) {
+    if (shapeAssertionError) {
+      throw shapeAssertionError
+    }
+
+    if (process.env.NODE_ENV !== 'production') {
+      const warningMessage = getUnexpectedStateShapeWarningMessage(
+        state,
+        finalReducers,
+        action,
+        unexpectedKeyCache
+      )
+      if (warningMessage) {
+        warning(warningMessage)
+      }
+    }
+
+    let hasChanged = false
+    const nextState = {}
+    for (let i = 0; i < finalReducerKeys.length; i++) {
+      // a b
+      const key = finalReducerKeys[i]
+      // 每一个reducer 即 a b代表的函数
+      const reducer = finalReducers[key]
+      // state['a']  但是不知道这里 state 从哪传进来的,应该是整个状态树？
+      const previousStateForKey = state[key]
+      // 即 执行 a 这个reducer
+      const nextStateForKey = reducer(previousStateForKey, action)
+      // reducer不能返回undefined
+      if (typeof nextStateForKey === 'undefined') {
+        const errorMessage = getUndefinedStateErrorMessage(key, action)
+        throw new Error(errorMessage)
+      }
+      // 新的state['a'] 等于 刚才执行了reducer以后返回来的新对象
+      // 这里也就是为什么 reducer是个纯函数，不是在以前的state上面改，而是直接return新对象
+      nextState[key] = nextStateForKey
+      // 这句话的意思 就是除非所有的 新状态 === 旧状态， hasChanged才会返回false
+      // 这里用全===直接比较引用类型，而没有用深比较。也就是只要在reducer里面返回了新对象，而不是直接返回state里都会判断为false，所以default里面必须直接返回state 而不能返回 {...state}
+      hasChanged = hasChanged || nextStateForKey !== previousStateForKey
+    }
+    // 判断返回新状态还是旧状态
+    return hasChanged ? nextState : state
+  }
+}
+
+```
+
+这里可以看到触发一个`action`会走过每一个`reducer`，所以这里留了一个问题，当`state tree`过于庞大时，redux会不会影响性能，[知乎关于此问题](https://www.zhihu.com/question/41904561)。这里暂时留个口子
+
+
+### compose
+
+  > 这个知识点在于 纯函数 的理解
+
+```js
+export default function compose(...funcs) {
+  if (funcs.length === 0) {
+    return arg => arg
+  }
+
+  if (funcs.length === 1) {
+    return funcs[0]
+  }
+
+  return funcs.reduce((a, b) => (...args) => a(b(...args)))
+}
+
+```
