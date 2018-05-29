@@ -91,6 +91,7 @@
       }
     };
     // 用于取消定时器 挂在他的一个属性上
+    // 这里不知道为啥有个!
     (throttled as any).cancel = () => cancelRequestAnimationFrame(requestId!);
 
     return throttled;
@@ -110,6 +111,7 @@
             return fn;
           }
           // 也就是用动画 throttleByAnimationFrame 来装饰 fn
+          // boundFn() 就是 getRequestAnimationFrame( fn(arg) ); boundFn.cancel()把这个取消
           let boundFn = throttleByAnimationFrame(fn.bind(this));
           definingProperty = true;
           Object.defineProperty(this, key, {
