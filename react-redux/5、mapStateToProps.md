@@ -28,6 +28,9 @@ export function whenMapStateToPropsIsMissing(mapStateToProps) {
 // wrapMapToProps.js
 export function wrapMapToPropsConstant(getConstant) {
   return function initConstantSelector(dispatch, options) {
+    // 把dispatch 和 options 通过传入的函数给被包裹的组件。
+    // 如果如上面的 传入的是个空函数 wrapMapToPropsConstant(()=>{}) 那是不会给被包裹的组件传递任何的属性
+    // 这里的constant会是undefined
     const constant = getConstant(dispatch, options)
     function constantSelector() { return constant }
     // 这里添加了一个属性，代表不依赖本身的props，在selectorFactory里面进行判断是否更新组件

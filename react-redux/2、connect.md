@@ -62,6 +62,12 @@ import defaultMapStateToPropsFactories from './mapStateToProps'
 import defaultMergePropsFactories from './mergeProps'
 import defaultSelectorFactory from './selectorFactory'
 
+
+/*
+  下面的match用法可知，factories 是一个 函数组成的数组，这里面的函数 的返回条件 是根据arg的存在与否来返回
+  比如： func a (arg) { return arg? func : undefined } ; func b(arg){ return !arg? func: undefined }
+  最终只会返回一个func
+*/
 function match(arg, factories, name) {
   for (let i = factories.length - 1; i >= 0; i--) {
     const result = factories[i](arg)
@@ -96,6 +102,7 @@ export function createConnect({
     } = {}
   ) {
     // 这3个通过下面的connectHOC传给selectorFactory   即mapStateToProps...
+    // 通过match 函数， 判断是否传入真实的 mapStateToProps等参数来返回函数
     const initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps')
     const initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps')
     const initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps')
@@ -125,4 +132,17 @@ export function createConnect({
 }
 
 export default createConnect()
+// ==>  connect( mapStateToProps,mapDispatchToProps, mergeProps, option={} )(selectorFactory)
+```
+
+`mergeProps` 也是一个函数，用来筛选出哪些参数传递给组件。默认的情况是3个参数 `stateProps` , `dispatchProps`,`parentProps`。 
+`stateProps` 是 `mapStateToProps` 的返回值， `dispatchProps` 是 `mapDispatchToProps` 的返回值，`parentProps` 是当前组件自己的属性。 
+这个函数的作用就是把这三个返回值拼装起来返回给组件，所以我们写 `connect(mapStateToProps, mapDispatchToProps)()` 的时候会把这些传过去，如果需要修改过滤，就可以用这个第三个参数修改过滤
+
+> mergeProps.js
+
+```js
+export function defaultMergeProps(stateProps, dispatchProps, ownProps) {
+  return { ...ownProps, ...stateProps, ...dispatchProps }
+}
 ```
