@@ -354,6 +354,7 @@ constructor(props, context) {
 initSelector() {
   const sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions)
   this.selector = makeSelectorStateful(sourceSelector, this.store)
+  // 执行sourceSelector ，并添加 shouldComponentUpdate和error 增加代码健壮性
   this.selector.run(this.props)
 }
 
@@ -414,4 +415,38 @@ export function impureFinalPropsSelectorFactory(
     )
   }
 }
+```
+
+
+接着来看 `constructor` 里的另外一个初始化函数 `initSubscription`
+*下面的东西有点复杂，感觉很多东西理解有误*
+
+```js
+initSubscription() {
+
+  if (!shouldHandleStateChanges) return
+
+  // parentSub's source should match where store came from: props vs. context. A component
+  // connected to the store via props shouldn't use subscription from context, or vice versa.
+  const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
+  this.subscription = new Subscription(this.store, parentSub, this.onStateChange.bind(this))
+
+  // `notifyNestedSubs` is duplicated to handle the case where the component is  unmounted in
+  // the middle of the notification loop, where `this.subscription` will then be null. An
+  // extra null check every change can be avoided by copying the method onto `this` and then
+  // replacing it with a no-op on unmount. This can probably be avoided if Subscription's
+  // listeners logic is changed to not call listeners that have been unsubscribed in the
+  // middle of the notification loop.
+  this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription)
+}
+```
+
+这段代码看着短，但是信息量不小，尤其还有一个类 `Subscription` 。一点一点来分析
+
+`shouldHandleStateChanges` 代表是否传入了`mapStateToProps`，就是 `connect(mapStateToProps)`
+判断这个的值是通过 **connect.js** 里面的 `Boolean(mapStateToProps)` 来判断的 
+注意  `Boolean({}) => true`
+```js
+  // 
+  if (!shouldHandleStateChanges) return
 ```
