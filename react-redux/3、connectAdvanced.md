@@ -359,16 +359,19 @@ initSelector() {
 
 ```
 
-至于 `selectorFactory` 这里只需要知道 传进去的是 `store` 里的 `dispatch` 和高阶函数里处理过的 `selectorFactoryOptions`，会返回一个普通的对象 `{...ownProps, ...stateProps, ...dispatchProps}` ，也就是说这里会把 `mergeProps` 过的属性传给被包裹的组件，并且注意 `stateProps` 会覆盖掉 父组件来的 `ownProps`。
-**这里也就是说同名的条件下 dispatch 覆盖 store 覆盖 props**
+至于 `selectorFactory` 这里只需要知道 传进去的是 `store` 里的 `dispatch` 和高阶函数里处理过的 `selectorFactoryOptions`，（缺省，现在暂且这么认为）会返回一个普通的对象 `{...ownProps, ...stateProps, ...dispatchProps}` ，也就是说这里会把 `mergeProps` 过的属性传给被包裹的组件，并且注意 `stateProps` 会覆盖掉 父组件来的 `ownProps`。
+**这里也就是说同名的条件下 `dispatch` 覆盖 `store` 覆盖 `props`**
 
+第一次声明 `this.selector` 属性是用的 `makeSelectorStateful` 的方法，我们来看一下
 
 ```js
 function makeSelectorStateful(sourceSelector, store) {
-  // wrap the selector in an object that tracks its results between runs.
+  // wrap the selector in an object that tracks its results between runs
+  // 根据这个注释可以看出来 其实 为了代码健壮性给 sourceSelector 包装了一下，然后在运行.
   const selector = {
     run: function runComponentSelector(props) {
       try {
+        // nextProps是一个普通的对象
         const nextProps = sourceSelector(store.getState(), props)
         if (nextProps !== selector.props || selector.error) {
           selector.shouldComponentUpdate = true
@@ -383,5 +386,26 @@ function makeSelectorStateful(sourceSelector, store) {
   }
 
   return selector
+}
+```
+
+还记得 `sourceSelector` 是调用的 `selectorFactory` 初始化出来的变量吗？ `sourceSelector` 是返回回来的一个 `func` 接收两个参数 一个是 `state` 一个是 `ownProps` 。下面我放上默认的一种简单的返回的函数，方便理解
+
+```js
+
+export function impureFinalPropsSelectorFactory(
+  mapStateToProps,
+  mapDispatchToProps,
+  mergeProps,
+  dispatch
+) {
+  //  可以把这个地方理解成 sourceSelector 。而默认的 mergeProps 就是返回的 {...ownProps, ...state, ...dispatch}
+  return function impureFinalPropsSelector(state, ownProps) {
+    return mergeProps(
+      mapStateToProps(state, ownProps),
+      mapDispatchToProps(dispatch, ownProps),
+      ownProps
+    )
+  }
 }
 ```
