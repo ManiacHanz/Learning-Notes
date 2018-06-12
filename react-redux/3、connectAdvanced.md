@@ -375,7 +375,10 @@ function makeSelectorStateful(sourceSelector, store) {
         const nextProps = sourceSelector(store.getState(), props)
         if (nextProps !== selector.props || selector.error) {
           // 对比直接在 initSelector 里面直接运行，添加了一个 shouldComponentUpdate 和 error
+          // shouldComponentUpdate来记录组件是否应该更新，如果对象变了（引用对比），就会更新
+          // 如果返回的同一个对象， 就不会更新组件
           selector.shouldComponentUpdate = true
+          // 用.props做成缓存，方便下次对边
           selector.props = nextProps
           selector.error = null
         }
@@ -389,6 +392,8 @@ function makeSelectorStateful(sourceSelector, store) {
   return selector
 }
 ```
+
+这里挂在的 `shouldComponentUpdate` 开关很重要，后面许多判断组件是否应该更新，已经使用 `this.forceUpdate()` 的地方都用的这个属性进行的判断。也就是说，当返回的对象，和缓存里的 `.props` 相同的时候，就不会更新组件
 
 还记得 `sourceSelector` 是调用的 `selectorFactory` 初始化出来的变量吗？ `sourceSelector` 是返回回来的一个 `func` 接收两个参数 一个是 `state` 一个是 `ownProps` 。下面我放上默认的一种简单的返回的函数，方便理解
 
