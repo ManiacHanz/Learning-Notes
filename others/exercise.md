@@ -39,6 +39,15 @@ const a = {
 console.log(a==1,a==2,a==3)   // true true true
 ```
 
+除了上面两种对象的方法，还有一种巧妙的数组方法
+
+```js
+var a = [1,2,3];
+a.join = a.shift;
+console.log(a == 1 && a == 2 && a == 3);
+```
+这个答案还是比较巧妙的，我们知道 `array` 也属于对象，应该和对象的规则一样。关于 `array` 的原型链上的 `toString` 方法
+对于数组对象，`toString` 方法返回一个字符串，该字符串由数组中的每个元素的 `toString()` 返回值经调用 `join()` 方法连接（由逗号隔开）组成。
 
 
 另：附两种菜鸡（本人）的思路，~~但是没有完美的达成答案目标~~
@@ -48,29 +57,29 @@ console.log(a==1,a==2,a==3)   // true true true
 ```js
 let base = 0
 let obj = {}
-Object.defineProperty(obj,'val',{
+Object.defineProperty(obj,'a',{
   get:function(){
     return ++base
   },
   set: function(newValue){
-    val = newValue
+    a = newValue
   }
 })
-console.log([obj.value==1,obj.value==2,obj.value==3])    // true true true
+console.log([obj.a==1,obj.a==2,obj.a==3])    // true true true
 ```
 ~~这里问题在于不能把obj.value赋值给变量a，所以没法达到题目要求~~
 把上面的`obj`换成 `window`就行了
 ```js
 let base = 0
-Object.defineProperty(window,'val',{
+Object.defineProperty(window,'a',{
   get:function(){
     return ++base
   },
   set: function(newValue){
-    val = newValue
+    a = newValue
   }
 })
-console.log([value==1,value==2,value==3])    // true true true
+console.log([a==1,a==2,a==3])    // true true true
 ```
 
 * 使用闭包
