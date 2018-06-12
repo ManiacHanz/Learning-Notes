@@ -441,12 +441,24 @@ initSubscription() {
 }
 ```
 
-这段代码看着短，但是信息量不小，尤其还有一个类 `Subscription` 。一点一点来分析
+这段代码看着短，但是信息量不小，尤其还有一个类 `Subscription` 。一句一句来分析
 
 `shouldHandleStateChanges` 代表是否传入了`mapStateToProps`，就是 `connect(mapStateToProps)`
 判断这个的值是通过 **connect.js** 里面的 `Boolean(mapStateToProps)` 来判断的 
 注意  `Boolean({}) => true`
+
 ```js
-  // 
   if (!shouldHandleStateChanges) return
+```
+
+
+```js
+  const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
+```
+像我这种记性差的程序猿，大概要复习一下 `this.propMode`
+```js
+  constructor(props){
+    //...
+    this.propsMode = Boolean(props[storeKey])
+  }
 ```
