@@ -367,13 +367,14 @@ initSelector() {
 ```js
 function makeSelectorStateful(sourceSelector, store) {
   // wrap the selector in an object that tracks its results between runs
-  // 根据这个注释可以看出来 其实 为了代码健壮性给 sourceSelector 包装了一下，然后在运行.
+  // 根据这个注释可以看出来，其实为了代码健壮性给 sourceSelector 包装了一下，然后在运行.
   const selector = {
     run: function runComponentSelector(props) {
       try {
         // nextProps是一个普通的对象
         const nextProps = sourceSelector(store.getState(), props)
         if (nextProps !== selector.props || selector.error) {
+          // 对比直接在 initSelector 里面直接运行，添加了一个 shouldComponentUpdate 和 error
           selector.shouldComponentUpdate = true
           selector.props = nextProps
           selector.error = null
