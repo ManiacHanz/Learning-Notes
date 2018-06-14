@@ -522,6 +522,7 @@ export default function applyMiddleware(...middlewares) {
     chain = middlewares.map(middleware => middleware(middlewareAPI))
     // 这个store.dispatch 就是第一个中间件的next
     // 因为 compose函数的作用就是 返回一个 mid1(mid2(mid3( store.dispatch )))
+    // 这里把上面的 用于抛错的 dispatch 覆盖了，所以最终返回的dispatch是被覆盖过的
     dispatch = compose(...chain)(store.dispatch)
 
     // 返回了store里面的几个api  ，但是这里的 dispatch已经被改过了
@@ -556,5 +557,50 @@ thunk.withExtraArgument = createThunkMiddleware;
 export default thunk;
 ```
 
+这里假设一个场景在加深下理解 比如 `applyMiddleware(thunk)` 的时候。源码的 `chain`就等于
+```js
+// chain
+ [({ dispatch, getState }) => next => action => {
+    if (typeof action === 'function') {
+      return action(dispatch, getState, extraArgument);
+    }
+
+    return next(action);
+  }]
+```
+
+然后经过了`compose()`, `arg.length === 1` 的时候其实就只是等于 `func[0]`
+所以就是返回 这个函数
+
+```js
+// action
+function increment() {
+  return {
+    type: INCREMENT_COUNTER
+  };
+}
+function incrementAsync() {
+  return dispatch => {
+    setTimeout(() => {
+      // Yay! Can invoke sync or async actions with `dispatch`
+      dispatch(increment());
+    }, 1000);
+  };
+}
+
+// action = dispatch => setTimeout(...)
+// 结合上面其实就是把 上面的action执行了返回去了 action() 执行了就是一个延迟一秒以后执行了 同步的increment
+// 返回的一个普通对象
+
+  ( ({ dispatch, getState }) => next => action => {
+    if (typeof action === 'function') {
+      return action(dispatch, getState, extraArgument);
+    }
+
+    return next(action);
+  } )(store.dispatch)
+```
+
+`applyMiddleware` 具体的理解还不深，需要以后结合真实环境具体抠一下
 
 **以上就是在下对redux的分析啦，欢迎各位大佬批评指正，也欢迎star！！！**
