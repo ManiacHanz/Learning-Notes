@@ -467,3 +467,19 @@ initSubscription() {
 ```
 
 那么 `parentSub` 大部分情况下都是等于 `this.props[subscriptionKey]`
+再来看 `new Subscription()` 的第三个参数 `onStateChange`
+
+```js
+onStateChange() {
+  this.selector.run(this.props)
+
+  if (!this.selector.shouldComponentUpdate) {
+    this.notifyNestedSubs()
+  } else {
+    this.componentDidUpdate = this.notifyNestedSubsOnComponentDidUpdate
+    this.setState(dummyState)
+  }
+}
+```
+
+第一行是执行以下 `run` 函数，也就是返回那3个 `props` 的对象。后面的判断用到了前面写过的在`initSelector`里挂载的 `shouldComponentUpdate` 属性。当*不更新*时，调用的一个方法 `notifyNestedSubs` , 而需要更新时，会赋值另一个方法，并且设置 `state` 为空
