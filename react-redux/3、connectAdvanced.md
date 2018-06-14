@@ -455,10 +455,15 @@ initSubscription() {
 ```js
   const parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey]
 ```
-像我这种记性差的程序猿，大概要复习一下 `this.propMode`
+
+像我这种记性差的程序猿，大概要复习一下 `this.propMode`，这里其实就是区分 `store` 的 `key` 值，是从 `props` 里获得的还是 `context` 获得的。
+> 这里从 `context` 获得 `store` `key` 的情景暂时没遇到过，网上说是在区分单个 `store` 和 多个 `store`。遇到的时候过来补充
+
 ```js
   constructor(props){
     //...
     this.propsMode = Boolean(props[storeKey])
   }
 ```
+
+那么 `parentSub` 大部分情况下都是等于 `this.props[subscriptionKey]`
