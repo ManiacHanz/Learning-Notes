@@ -547,9 +547,11 @@ function createThunkMiddleware(extraArgument) {
       return action(dispatch, getState, extraArgument);
     }
 
-    return next(action);
+    return next(action);  
   };
 }
+
+
 
 const thunk = createThunkMiddleware();
 thunk.withExtraArgument = createThunkMiddleware;
@@ -590,7 +592,7 @@ function incrementAsync() {
 
 // action = dispatch => setTimeout(...)
 // 结合上面其实就是把 上面的action执行了返回去了 action() 执行了就是一个延迟一秒以后执行了 同步的increment
-// 返回的一个普通对象
+// 返回的一个普通对象(错！！！)
 
   ( ({ dispatch, getState }) => next => action => {
     if (typeof action === 'function') {
@@ -602,5 +604,10 @@ function incrementAsync() {
 ```
 
 `applyMiddleware` 具体的理解还不深，需要以后结合真实环境具体抠一下
+
+```js
+const a = next => action => {}
+return store.dispatch(action)
+```
 
 **以上就是在下对redux的分析啦，欢迎各位大佬批评指正，也欢迎star！！！**

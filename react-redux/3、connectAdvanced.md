@@ -324,6 +324,29 @@ render() {
 }
 ```
 
+这个 `addExtraProps` 简单的说，就是字面上的意思，在某种情况下给 `props` 加一些属性
+
+```js
+addExtraProps(props) {
+  if (!withRef && !renderCountProp && !(this.propsMode && this.subscription)) return props
+  // make a shallow copy so that fields added don't leak to the original selector.
+  // this is especially important for 'ref' since that's a reference back to the component
+  // instance. a singleton memoized selector would then be holding a reference to the
+  // instance, preventing the instance from being garbage collected, and that would be bad
+  // 给props做一个浅拷贝，这样添加的字段不会泄露给原始的selector -- 应该是指没有connect前的组件--
+  // 由于 'ref' 是对组件实例的一个引用， 所以这点特别重要
+  // 一个单例缓存的选择器会保持对这个实例的引用，来防止这个实例被垃圾回收机制回收
+  const withExtras = { ...props }
+  // ref 引用
+  if (withRef) withExtras.ref = this.setWrappedInstance
+  // 给devtool记录渲染次数
+  if (renderCountProp) withExtras[renderCountProp] = this.renderCount++
+  // initSubscription 里生成的类
+  if (this.propsMode && this.subscription) withExtras[subscriptionKey] = this.subscription
+  return withExtras
+}
+```
+
 那我们来找找 `this.selector` 是什么
 
 ```js
@@ -482,4 +505,18 @@ onStateChange() {
 }
 ```
 
-第一行是执行以下 `run` 函数，也就是返回那3个 `props` 的对象。后面的判断用到了前面写过的在`initSelector`里挂载的 `shouldComponentUpdate` 属性。当*不更新*时，调用的一个方法 `notifyNestedSubs` , 而需要更新时，会赋值另一个方法，并且设置 `state` 为空
+第一行是执行以下 `run` 函数，也就是返回那3个 `props` 的对象。后面的判断用到了前面写过的在`initSelector`里挂载的 `shouldComponentUpdate` 属性。当*不更新*时，调用的一个方法 `notifyNestedSubs` , 而需要更新时，会赋值另一个方法，并且通过设置 `this.setState({})` 来更新组件
+
+回到 `initSubscription` 分析最后一句
+
+```js
+  // `notifyNestedSubs` is duplicated to handle the case where the component is  unmounted in
+  // the middle of the notification loop, where `this.subscription` will then be null. An
+  // extra null check every change can be avoided by copying the method onto `this` and then
+  // replacing it with a no-op on unmount. This can probably be avoided if Subscription's
+  // listeners logic is changed to not call listeners that have been unsubscribed in the
+  // middle of the notification loop.
+this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription)
+```
+
+这一小段，把 `subscription` 中的 `notifyNestedSubs` 方法，复制一份绑定给 `this` 的 `notifyNestedSubs` 属性上。作者给这一句写了大量的注释。大意是说，在 `notification` 循环中，组件可能会被卸载，于是 `this.subscription` 就会变成空，为了避免这种情况，于是用这段，把这个方法复制挂载到 `this` 上，并且在被写在上会用 `no-op` 替换掉。还有一种可能性，就是 `listeners` 不会在循环中不会去调用其他被卸载的 `listener` 
