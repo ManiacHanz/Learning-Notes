@@ -68,7 +68,7 @@ const ws = new WeakSet(b);
 
 > `Object`是 '字符串-值'; `Map`是 '值-值'
 
-*由于可以接收任何类型作为键名，当遇到复杂类型的时候，必须访问统一引用才能得到期盼的值，否则是undefined*
+*由于可以接收任何类型作为键名，当遇到复杂类型的时候，必须访问统一引用才能得到期盼的值，否则是undefined；而简单类型只需要 值 严格相等，且Nan虽然不等于自身，但Map会视为同一个*
 
 Map的构造函数比较特殊，接受一组有 Iterator的对象（从这点看Map和Set相同），而数组的成员是表示键值对的数组
 ```js
@@ -94,4 +94,81 @@ const map = new Map();
 items.forEach(
   ([key, value]) => map.set(key, value)
 );
+
+
+// 引用地址不同，取不到值
+map.set(['a'], 555);
+map.get(['a']) // undefined
 ```
+
+### Map的属性和方法
+
+* size 获取实例长度
+* set(key, value)  设置值
+* get(key)  获取值或者undefined
+* has(key)  返回是键是否存在的`bool`
+* delete(key)  返回是否删除成功的`bool`
+* clear()  清楚所有成员，不返回
+
+遍历方法
+**Map有遍历顺序，和插入顺序相同**
+
+* keys()：返回键名的遍历器。
+* values()：返回键值的遍历器。
+* entries()：返回所有成员的遍历器。
+* forEach()：遍历 Map 的所有成员。
+
+```js
+// foreach可以接收第二个参数作为this
+const reporter = {
+  report: function(key, value) {
+    console.log("Key: %s, Value: %s", key, value);
+  }
+};
+map.forEach(function(value, key, map) {
+  this.report(key, value);
+}, reporter);
+```
+
+和对象之间的互相转换
+
+```js
+// Map -> Obj
+function strMapToObj(strMap) {
+  let obj = Object.create(null);
+  for (let [k,v] of strMap) {
+    obj[k] = v;
+  }
+  return obj;
+}
+
+const myMap = new Map()
+  .set('yes', true)
+  .set('no', false);
+strMapToObj(myMap)
+// { yes: true, no: false }
+
+// Obj -> Map
+function objToStrMap(obj) {
+  let strMap = new Map();
+  for (let k of Object.keys(obj)) {
+    strMap.set(k, obj[k]);
+  }
+  return strMap;
+}
+
+objToStrMap({yes: true, no: false})
+// Map {"yes" => true, "no" => false}
+```
+
+
+## WeakMap
+
+WeakMap和Map的两个区别
+
+* WeakMap只接受非null的对象做键名
+* WeakMap的键值不计入垃圾回收
+
+
+- 方法只有 get()   set()    has()    delete()
+- 没有 size属性   没有遍历方法    没有clear()清空
