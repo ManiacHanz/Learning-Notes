@@ -26,7 +26,8 @@ function camelCase(name) {
 ```
 
 ```js
-// 去中心化的引用所有的样式文件
+// 去中心化的引用所有的样式文件 不需要像普通路由一样，每个都需要维护，而只是通过正则去匹配引入相应的文件模块
+// 关键词  require.context
 const req = require.context('./components', true, /^\.\/[^_][\w-]+\/style\/index\.tsx?$/);
 
 req.keys().forEach((mod) => {
