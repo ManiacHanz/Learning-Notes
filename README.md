@@ -8,7 +8,7 @@
 2、 ant-design分组件试读
 
 
-3、 redux源码解读，读出来比react-redux简单多了
+3、 redux源码解读，仅供参考
 
 
 4、ES6的总结记忆，主要参考阮一峰大神的Es6入门
