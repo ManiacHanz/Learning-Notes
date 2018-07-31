@@ -3,7 +3,8 @@
 
 
 ### dedupe
-    [地址戳这里](https://github.com/seriousManual/dedupe)
+
+[地址戳这里](https://github.com/seriousManual/dedupe)
 
 > 主要用来数组去重
 
@@ -68,6 +69,6 @@ module.exports = dedupe
 
 ### flatten
     
-    [地址](https://github.com/jonschlinkert/arr-flatten)
-    
+[地址](https://github.com/jonschlinkert/arr-flatten)
+
 > 用于给数组扁平化
