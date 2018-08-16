@@ -71,6 +71,7 @@ function Promise(fn) {
   this._deferreds = null;
   // 传的函数是noop时，就不需要执行 doResolve 函数了
   if (fn === noop) return;
+  // 核心函数 fn = (resolve, reject) => {}
   doResolve(fn, this);
 }
 Promise._onHandle = null;
@@ -79,7 +80,116 @@ Promise._noop = noop;
 
 ```
 
-接下来看挂载在`Promise`原型上的 `then` 方法
+用 `doResolve` 做一些错误的兼容，同时保证 `onFulfilled` 和 `onRejected` 只被调用一次
+
+*不保证异步*
+
+```js
+/**
+ * Take a potentially misbehaving resolver function and make sure
+ * onFulfilled and onRejected are only called once.
+ *
+ * Makes no guarantees about asynchrony.
+ */
+function doResolve(fn, promise) {
+  var done = false;
+  // tryCallTwo(fn, a, b)    --->  fn(a, b)
+  // 使用done的作为开关，保证只执行一次
+  // new Promise((resolve, reject) => {resolve(res)})
+  // 这里分流了resolve和 reject
+  var res = tryCallTwo(fn, function (value) {
+    if (done) return;
+    done = true;
+    resolve(promise, value);
+  }, function (reason) {
+    if (done) return;
+    done = true;
+    reject(promise, reason);
+  });
+  if (!done && res === IS_ERROR) {
+    done = true;
+    reject(promise, LAST_ERROR);
+  }
+}
+```
+
+`resolve`和`reject`
+
+```js
+// self 是 new Promise的实例
+// newValue 是 resolve传进来的参数
+function resolve(self, newValue) {
+  // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
+  // 保证不能传进实例本身
+  if (newValue === self) {
+    return reject(
+      self,
+      new TypeError('A promise cannot be resolved with itself.')
+    );
+  }
+  if (
+    // 传入的对象或者函数
+    newValue &&
+    (typeof newValue === 'object' || typeof newValue === 'function')
+  ) {
+    var then = getThen(newValue);
+    if (then === IS_ERROR) {
+      return reject(self, LAST_ERROR);
+    }
+    if (
+      then === self.then &&
+      newValue instanceof Promise
+    ) {
+      // 这里 传进来的 参数是一个Promise实例 ，所以把_state改成 3
+      // 代表 adopted the state of another promise, _value 
+      self._state = 3;
+      self._value = newValue;
+      // 这里的函数会让 self = self._value
+      finale(self);
+      return;
+    } else if (typeof then === 'function') {
+      // 如果是个函数，就递归调用
+      doResolve(then.bind(newValue), self);
+      return;
+    }
+  }
+  // state 从 pending 换成 fulfilled
+  self._state = 1;
+  // 把resolve(newValue) 的值挂在实例的_value属性上 方便统一调用finale
+  self._value = newValue;
+  finale(self);
+}
+
+function reject(self, newValue) {
+  // _state换成 rejected
+  self._state = 2;
+  self._value = newValue;
+  if (Promise._onReject) {
+    // 也就是说可以统一配置 onReject的方法 
+    Promise._onReject(self, newValue);
+  }
+  finale(self);
+}
+```
+
+连续来看 `finale` 方法, 是一个通过 `_deferredState` 属性分流执行 `handle` 方法
+
+```js
+function finale(self) {
+  if (self._deferredState === 1) {
+    handle(self, self._deferreds);
+    self._deferreds = null;
+  }
+  if (self._deferredState === 2) {
+    for (var i = 0; i < self._deferreds.length; i++) {
+      handle(self, self._deferreds[i]);
+    }
+    self._deferreds = null;
+  }
+}
+```
+
+`handle`就是`Promise`处理的最后一步，先看挂载在`Promise`原型上的 `then` 方法
 
 ```js
 Promise.prototype.then = function(onFulfilled, onRejected) {
@@ -87,17 +197,16 @@ Promise.prototype.then = function(onFulfilled, onRejected) {
       // safeThen 方法是兼容 ，有可能Promise的prototype被修改，导致new出来的实例没有指向Promise的方法
     return safeThen(this, onFulfilled, onRejected);
   }
-  // 给res 挂了一系列_deferredState,_state,_value,_deferreds方法
+  // 给res 挂了一系列_deferredState = 0,_state = 0,_value = null,_deferreds = null方法
   var res = new Promise(noop);
   // 对res进行了处理，再返回出来，成为then的返回值。
   // 具体的操作方法都写在了 Handler 类里
+  // 一个普通实例， 把onFulfilled , onRejected, promise都挂在新出来的实例的对应属性上
+  // 在把后面的实例挂在前面的这个promise实例的_deferreds的属性上
   handle(this, new Handler(onFulfilled, onRejected, res));
   return res;
 };
-```
 
-
-```js
 // 兼容Promise的原型被误修改，而不指向Promise本身的情况
 function safeThen(self, onFulfilled, onRejected) {
   return new self.constructor(function (resolve, reject) {
@@ -106,17 +215,25 @@ function safeThen(self, onFulfilled, onRejected) {
     handle(self, new Handler(onFulfilled, onRejected, res));
   });
 }
-// 第一个参数是环境，即this。也就是要指向Promise的实例
-// 
+```
+
+
+```js
+// 第一个参数是Promise的实例
 function handle(self, deferred) {
-    // 3 代表adopt 。这里暂时没接触往后放
+  // 3 代表 self._value 是一个promise实例
+  // 即 new Promise( (resolve, reject) => {resolve(new Promise() )})
   while (self._state === 3) {
     self = self._value;
   }
-  // 
+  // 兼容一个 Promise 类的全局函数，如果是 reject 会先执行 Promise._onReject
+  // 只是这里 _ 起名，同时api上也没看到可以修改这个，不知道这里到底是什么意思，给所有的promise实例统一一个插件一样的东西？
   if (Promise._onHandle) {
     Promise._onHandle(self);
   }
+  // _state = 0 代表 pending
+  // 只有在.then()的情况下可能会有 === 0 的情况
+  // 防止deferred.onFulfilled或者 deferred.onRejected都为空
   if (self._state === 0) {
     if (self._deferredState === 0) {
       self._deferredState = 1;
@@ -136,7 +253,9 @@ function handle(self, deferred) {
 
 function handleResolved(self, deferred) {
   asap(function() {
+    // 根据状态去resolve回调或者reject回调
     var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+    // 没传的情况
     if (cb === null) {
       if (self._state === 1) {
         resolve(deferred.promise, self._value);
@@ -145,6 +264,7 @@ function handleResolved(self, deferred) {
       }
       return;
     }
+    // cb(self._value)
     var ret = tryCallOne(cb, self._value);
     if (ret === IS_ERROR) {
       reject(deferred.promise, LAST_ERROR);
@@ -153,87 +273,42 @@ function handleResolved(self, deferred) {
     }
   });
 }
-function resolve(self, newValue) {
-  // Promise Resolution Procedure: https://github.com/promises-aplus/promises-spec#the-promise-resolution-procedure
-  if (newValue === self) {
-    return reject(
-      self,
-      new TypeError('A promise cannot be resolved with itself.')
-    );
+
+
+```
+
+
+
+看昏了没，我自己都写昏了。还是稍微总结一下，试着剔除多余兼容，抽离一下主要功能
+
+先随便写一个 `Promise` 的使用，方便下面总结
+```js
+const p = new Promise( (resolve, reject) => {
+  if( res ){
+    resolve(res)
+  }else{
+    reject(err)
   }
-  if (
-    newValue &&
-    (typeof newValue === 'object' || typeof newValue === 'function')
-  ) {
-    var then = getThen(newValue);
-    if (then === IS_ERROR) {
-      return reject(self, LAST_ERROR);
-    }
-    if (
-      then === self.then &&
-      newValue instanceof Promise
-    ) {
-      self._state = 3;
-      self._value = newValue;
-      finale(self);
-      return;
-    } else if (typeof then === 'function') {
-      doResolve(then.bind(newValue), self);
-      return;
-    }
-  }
-  self._state = 1;
-  self._value = newValue;
-  finale(self);
+} ) 
+```
+
+```js
+
+function Promise(fn){
+  // 状态和值肯定是必须的
+  this._state = 0
+  this._value = 0
+
+  doResolve(fn, this)
 }
 
-function reject(self, newValue) {
-  self._state = 2;
-  self._value = newValue;
-  if (Promise._onReject) {
-    Promise._onReject(self, newValue);
-  }
-  finale(self);
-}
-function finale(self) {
-  if (self._deferredState === 1) {
-    handle(self, self._deferreds);
-    self._deferreds = null;
-  }
-  if (self._deferredState === 2) {
-    for (var i = 0; i < self._deferreds.length; i++) {
-      handle(self, self._deferreds[i]);
-    }
-    self._deferreds = null;
-  }
+// 通过
+function doResolve(fn, promise){
+  fn( function(value){
+    resolve(promise, value)
+  }, function(err){
+    reject(promise, err)
+  })
 }
 
-function Handler(onFulfilled, onRejected, promise){
-  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
-  this.onRejected = typeof onRejected === 'function' ? onRejected : null;
-  this.promise = promise;
-}
-
-/**
- * Take a potentially misbehaving resolver function and make sure
- * onFulfilled and onRejected are only called once.
- *
- * Makes no guarantees about asynchrony.
- */
-function doResolve(fn, promise) {
-  var done = false;
-  var res = tryCallTwo(fn, function (value) {
-    if (done) return;
-    done = true;
-    resolve(promise, value);
-  }, function (reason) {
-    if (done) return;
-    done = true;
-    reject(promise, reason);
-  });
-  if (!done && res === IS_ERROR) {
-    done = true;
-    reject(promise, LAST_ERROR);
-  }
-}
 ```
