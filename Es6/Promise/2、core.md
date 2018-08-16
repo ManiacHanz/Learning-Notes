@@ -133,6 +133,7 @@ function resolve(self, newValue) {
     (typeof newValue === 'object' || typeof newValue === 'function')
   ) {
     var then = getThen(newValue);
+    // newValue如果挂在的then方法是个空对象，就会进入reject方法
     if (then === IS_ERROR) {
       return reject(self, LAST_ERROR);
     }
@@ -194,7 +195,7 @@ function finale(self) {
 ```js
 Promise.prototype.then = function(onFulfilled, onRejected) {
   if (this.constructor !== Promise) {
-      // safeThen 方法是兼容 ，有可能Promise的prototype被修改，导致new出来的实例没有指向Promise的方法
+      // safeThen 方法是兼容 ，保证可以实现链式调用
     return safeThen(this, onFulfilled, onRejected);
   }
   // 给res 挂了一系列_deferredState = 0,_state = 0,_value = null,_deferreds = null方法
@@ -234,6 +235,9 @@ function handle(self, deferred) {
   // _state = 0 代表 pending
   // 只有在.then()的情况下可能会有 === 0 的情况
   // 防止deferred.onFulfilled或者 deferred.onRejected都为空
+  // 这里不是太看得懂 这个 _deferredState 和 _deferreds 
+  // 只是根据finale方法倒推，当第一次初始化实例时，从0赋值为1 ，之后调用方法是调用单个方法
+  // 而从1变成2时，调用方法变成了一个数组
   if (self._state === 0) {
     if (self._deferredState === 0) {
       self._deferredState = 1;
@@ -289,20 +293,27 @@ const p = new Promise( (resolve, reject) => {
   }else{
     reject(err)
   }
-} ) 
+} ).then( (res)=>{}, (err)=>{})
 ```
+
+源码是写在一起的，这里我分开来分析，第一步 只分析 new Promise 里面能执行的过程精简；第二部在分析.then()里面能执行的东西
+
+先看 new Promise宏观任务, 这里不考虑兼容和报错
 
 ```js
 
 function Promise(fn){
   // 状态和值肯定是必须的
-  this._state = 0
-  this._value = 0
+  this._state = 0;
+  this._value = null;
+  // 下面两个好像用不到 ，先放上来
+  this._deferreds = null;
+  this._deferredState = 0;
 
   doResolve(fn, this)
 }
 
-// 通过
+// 通过doResolve改变状态 分流
 function doResolve(fn, promise){
   fn( function(value){
     resolve(promise, value)
@@ -310,5 +321,19 @@ function doResolve(fn, promise){
     reject(promise, err)
   })
 }
+// 简写 resolve 和 reject
+function resolve(promise, value){
+  promise._state = 1
+  promise._value = value
+  finale(promise)
+}
+function reject(promise, error){
+  promise._state = 2
+  promise._value = error
+  finale(promise)
+}
 
+function finale(promise){
+
+}
 ```
