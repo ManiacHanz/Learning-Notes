@@ -277,6 +277,12 @@ function handleResolved(self, deferred) {
     }
   });
 }
+// Handler类
+function Handler(onFulfilled, onRejected, promise){
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+  this.promise = promise;
+}
 
 
 ```
@@ -296,7 +302,7 @@ const p = new Promise( (resolve, reject) => {
 } ).then( (res)=>{}, (err)=>{})
 ```
 
-源码是写在一起的，这里我分开来分析，第一步 只分析 new Promise 里面能执行的过程精简；第二部在分析.then()里面能执行的东西
+源码是写在一起的，这里我分开来分析，第一步 只分析 new Promise 里面能执行的过程精简；第二步在分析.then()里面能执行的东西
 
 先看 new Promise宏观任务, 这里不考虑兼容和报错
 
@@ -314,6 +320,8 @@ function Promise(fn){
 }
 
 // 通过doResolve改变状态 分流
+// 这里根据上面的小栗子，if就是直接执行 resolve(promise, res)
+// else就执行 reject(promise, err)
 function doResolve(fn, promise){
   fn( function(value){
     resolve(promise, value)
@@ -322,18 +330,75 @@ function doResolve(fn, promise){
   })
 }
 // 简写 resolve 和 reject
+// 挂载_state 和 _value 以后就执行 finale(promise)
 function resolve(promise, value){
   promise._state = 1
   promise._value = value
+  // 这里就结束了，走不到finale里面的两个条件内
   finale(promise)
 }
 function reject(promise, error){
   promise._state = 2
   promise._value = error
+  // 这里就结束了，走不到finale里面的两个条件内
   finale(promise)
 }
 
 function finale(promise){
+  // 在这里面不对pending状态的promise进行处理，所以new出来的在这里就结束了
+  // 以resolve为例，此时 promise 的 _state = 1 , _value = value,
+  // 另外两个属性还是初始值 _deferredState = 0, _deferreds = null
+}
+```
 
+第二步是 .then()方法
+
+```js
+// 简化.then()方法
+Promise.prototype.then = function(onFulfilled, onRejected) {
+  var res = new Promise(noop);
+  handle(this, new Handler(onFulfilled, onRejected, res));
+  return res;
+};
+
+// 所以.then()方法里面 可以传成功和失败两个处理函数
+function Handler(onFulfilled, onRejected, promise){
+  // 这里的promise是一个只挂了 _state = 0, _deferredState = 0, _value = null, _deffered = null的实例
+  this.onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : null;
+  this.onRejected = typeof onRejected === 'function' ? onRejected : null;
+  this.promise = promise;
+}
+
+
+// 第一个参数是Promise的实例
+// 第二个参数是 handler的实例，也就是一个带着onResolve和onReject处理方法的实例
+function handle(self, deferred) {
+  handleResolved(self, deferred);
+}
+
+function handleResolved(self, deferred) {
+  // asap的作用是在宏观任务执行后会尽快执行里面的函数
+  asap(function() {
+    // resolve的话 这里 cb就等于 onFulfilled
+    var cb = self._state === 1 ? deferred.onFulfilled : deferred.onRejected;
+    if (cb === null) {
+      if (self._state === 1) {
+        //deferred.promise是 new Promise(noop)
+        resolve(deferred.promise, self._value);
+      } else {
+        reject(deferred.promise, self._value);
+      }
+      return;
+    }
+    // ret = cb(self._value)
+    // 即ret = cb(res)
+    var ret = tryCallOne(cb, self._value);
+    if (ret === IS_ERROR) {
+      reject(deferred.promise, LAST_ERROR);
+    } else {
+      // 递归调用resolve，用来链式调用
+      resolve(deferred.promise, ret);
+    }
+  });
 }
 ```
