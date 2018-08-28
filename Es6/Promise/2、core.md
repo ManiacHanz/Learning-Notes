@@ -40,6 +40,7 @@ function tryCallOne(fn, a) {
     return IS_ERROR;
   }
 }
+
 function tryCallTwo(fn, a, b) {
   try {
     fn(a, b);
