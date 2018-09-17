@@ -41,7 +41,6 @@ function tryCallOne(fn, a) {
   }
 }
 
-
 function tryCallTwo(fn, a, b) {
   try {
     fn(a, b);
