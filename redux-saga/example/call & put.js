@@ -1,4 +1,4 @@
-import { call, apply, cps } from 'redux-saga/effects'
+import { call, apply, cps, put } from 'redux-saga/effects'
 
 
 function* fetchProducts() {
@@ -34,3 +34,23 @@ const content = yield cps(readFile, '/path/to/file')
 // 上面函数的测试
 const iterator = fetchSaga()
 assert.deepEqual(iterator.next().value, cps(readFile, '/path/to/file') )
+
+
+// put 等同于 dispatch
+// 也是一个声明式指令，好处往上同call
+function* fetchProducts() {
+  const products = yield call(Api.fetch, '/products')
+  // 创建并 yield 一个 dispatch Effect
+  yield put({ type: 'PRODUCTS_RECEIVED', products })
+}
+
+// 单测
+// 创建一个假的响应对象
+const products = {}
+
+// 期望一个 dispatch 指令
+assert.deepEqual(
+  iterator.next(products).value,
+  put({ type: 'PRODUCTS_RECEIVED', products }),
+  "fetchProducts should yield an Effect put({ type: 'PRODUCTS_RECEIVED', products })"
+)
