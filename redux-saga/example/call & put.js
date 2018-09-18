@@ -1,5 +1,6 @@
 import { call, apply, cps, put } from 'redux-saga/effects'
 
+// 同时 call还是一个很好的阻塞方法，只有有返回值才会往后进行
 
 function* fetchProducts() {
     // yield Api.fetch('/products')
@@ -54,3 +55,4 @@ assert.deepEqual(
   put({ type: 'PRODUCTS_RECEIVED', products }),
   "fetchProducts should yield an Effect put({ type: 'PRODUCTS_RECEIVED', products })"
 )
+
