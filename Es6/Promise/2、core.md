@@ -66,6 +66,7 @@ function Promise(fn) {
   // Promise一共有3个状态 pending，fulfilled，rejected
   // 作者在这里分别赋予 0 , 1 , 2 来控制
   // 同时加了个3 代表 adopted the state of another promise, _value 
+  // 采用另一个promise实例的状态
   this._deferredState = 0;
   this._state = 0;
   this._value = null;
@@ -96,8 +97,10 @@ function doResolve(fn, promise) {
   var done = false;
   // tryCallTwo(fn, a, b)    --->  fn(a, b)
   // 使用done的作为开关，保证只执行一次
-  // new Promise((resolve, reject) => {resolve(res)})
+  // new Promise((resolve, reject) => { doSomething... ; resolve(res)})
   // 这里分流了resolve和 reject
+  // 所以这里就是Promise内部的函数作为宏观任务执行的原理
+  // fn( resolve => resolve(),  reject => reject() )
   var res = tryCallTwo(fn, function (value) {
     if (done) return;
     done = true;
