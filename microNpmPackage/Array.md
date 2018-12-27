@@ -291,3 +291,180 @@ export default (Arr, Caller, Target) => {
   return Instance;
 }
 ```
+
+
+### group-array
+
+把一个对象数组，按照某一个属性，规则的分组
+
+[地址](https://github.com/doowb/group-array)
+
+##### Usage 
+
+```js
+var arr = [
+  {tag: 'one', content: 'A'},
+  {tag: 'one', content: 'B'},
+  {tag: 'two', content: 'C'},
+  {tag: 'two', content: 'D'},
+  {tag: 'three', content: 'E'},
+  {tag: 'three', content: 'F'}
+];
+
+// group by the `tag` property
+groupArray(arr, 'tag');
+
+// result in:
+
+{
+  one: [
+    {tag: 'one', content: 'A'},
+    {tag: 'one', content: 'B'}
+  ],
+  two: [
+    {tag: 'two', content: 'C'},
+    {tag: 'two', content: 'D'}
+  ],
+  three: [
+    {tag: 'three', content: 'E'},
+    {tag: 'three', content: 'F'}
+  ]
+}
+```
+
+里面引用了一个包 `union`
+我们先看这个包的例子，这个形态一看就是核心了
+
+```js
+const union = require('union-value');
+const obj = {};
+
+union(obj, 'a.b.c', ['one', 'two']);
+union(obj, 'a.b.c', ['three']);
+
+console.log(obj);
+//=> { a: { b: { c: [ 'one', 'two', 'three' ] } } }
+```
+
+接下来看源码，是一个递归函数 加上一个 `union`包来搭建的轮子。
+todo一个流程图
+
+```js
+var split = require('split-string');
+var flatten = require('arr-flatten');
+// 核心包 轮子上的轮子
+var union = require('union-value');
+// 用来循环对象 分别返回value和key
+var forOwn = require('for-own');
+var typeOf = require('kind-of');
+var get = require('get-value');
+
+function groupFn(arr, props) {
+  // 错误处理
+  if (arguments.length === 1) {
+    return arr;
+  }
+  // 把参数扁平化，去掉arr这个参数，然后返回一个数组，
+  var args = flatten([].slice.call(arguments, 1));
+  // 只把第一个参数传进去
+  var groups = groupBy(arr, args[0]);
+
+  for (var i = 1; i < args.length; i++) {
+    toGroup(groups, args[i]);
+  }
+  return groups;
+}
+
+/**
+  第一个参数是传进去的
+  arr是传进来的数组
+  prop是第二个参数，也就是第一个标签
+*/
+function groupBy(arr, prop, key) {
+  // 给union包用的基础参数
+  var groups = {};
+
+  for (var i = 0; i < arr.length; i++) {
+    var obj = arr[i];
+    var val;
+
+    // allow a function to modify the object
+    // and/or return a val to use
+    if (typeof prop === 'function') {
+      val = prop.call(groups, obj, key);
+    } else {
+      // get包可以通过prop去获取对应的value。
+      // 不同的是可以用a.b.c.d这种取对象里递归的value
+      val = get(obj, prop);
+    }
+
+    switch (typeOf(val)) {
+      case 'undefined':
+        break;
+      case 'string':
+      case 'number':
+      case 'boolean':
+        // escape函数就是把val这个字符串格式化成'a.b.c'，服务union
+        // 
+        union(groups, escape(String(val)), obj);
+        break;
+      case 'object':
+      case 'array':
+      // 如果是数组就把里面的拆出来再用union
+        eachValue(groups, obj, val);
+        break;
+      case 'function':
+        throw new Error('invalid argument type: ' + key);
+    }
+  }
+  return groups;
+}
+
+function eachValue(groups, obj, val) {
+  // 分为数组和对象。数组直接循环，对象用了一个包来循环
+  if (Array.isArray(val)) {
+    val.forEach(function(key) {
+      union(groups, escape(key), obj);
+    });
+  } else {
+    forOwn(val, function(v, key) {
+      union(groups, escape(key), obj);
+    });
+  }
+}
+// 递归 形成叠层的group arr
+function toGroup(groups, prop) {
+  forOwn(groups, function(val, key) {
+    if (!Array.isArray(val)) {
+      // 不是数组就调用自己
+      groups[key] = toGroup(val, prop, key);
+    } else {
+      // 数组就一直调用groupBy的方法里 再循环处理一次
+      groups[key] = groupBy(val, prop, key);
+    }
+  });
+  return groups;
+}
+
+// 这个函数其实是为union 第二个参数格式化'a.b.c.d'
+function escape(str) {
+  var opts = {
+    strict: false,
+    keepEscaping: true,
+    keepDoubleQuotes: true,
+    keepSingleQuotes: true
+  };
+
+  try {
+    return split(str, opts).join('\\.');
+  } catch (err) {
+    return str;
+  }
+}
+
+/**
+ * Expose `groupArray`
+ */
+
+module.exports = groupFn;
+```
