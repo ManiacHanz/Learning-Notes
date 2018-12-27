@@ -139,3 +139,155 @@ module.exports = function newArray(start, end) {
     return a
 }
 ```
+
+
+### arr-diff
+
+[地址](https://github.com/jonschlinkert/arr-diff)
+
+
+##### Usage
+
+```js
+var diff = require('arr-diff');
+
+var a = ['a', 'b', 'c', 'd'];
+var b = ['b', 'c'];
+
+console.log(diff(a, b))
+//=> ['a', 'd']
+```
+
+
+```js
+/**
+* 这里只接收第一个数组，在后面会变成前两个比较后的diff数组
+* 使用arguments对象和一个变量的增加来做成一个不限制长度的参数
+*/
+module.exports = function diff(arr/*, arrays*/) {
+  var len = arguments.length;
+  var idx = 0;
+  
+  while (++idx < len) {
+      /**
+      * 第一次arr是传入的参数，也就是第一个数组
+      * 第二次传入的arr，是第一次比较以后返回的不同的arr
+      * 也就是会比较所有的不同
+      */
+    arr = diffArray(arr, arguments[idx]);
+  }
+  return arr;
+};
+
+function diffArray(one, two) {
+  //  如果第二个参数不是数组直接返回第一个参数
+  if (!Array.isArray(two)) {
+    return one.slice();
+  }
+
+  var tlen = two.length
+  var olen = one.length;
+  var idx = -1;
+  var arr = [];
+  
+  while (++idx < olen) {
+    var ele = one[idx];
+    // 用有相同的这个变量做开关 一旦发现相同的就跳出这次 
+    // 不同的就放进diff里
+    // 所以只能比较简单类型
+    var hasEle = false;
+    for (var i = 0; i < tlen; i++) {
+      var val = two[i];
+
+      if (ele === val) {
+        hasEle = true;
+        break;
+      }
+    }
+
+    if (hasEle === false) {
+      arr.push(ele);
+    }
+  }
+  return arr;
+}
+```
+
+
+### map-array
+
+按照自定义方法把对象中的`key-value`组装成数组
+
+[地址](https://github.com/parro-it/map-array)
+
+##### Usage 
+
+```js
+const mapArray = require('map-array');
+const obj = {
+  giorgio: 'Bianchi',
+  gino: 'Rossi'
+};
+console.log(mapArray(obj, (key, value) => key + ' ' + value));
+// ['giorgio Bianchi', 'gino Rossi']
+```
+
+
+```js
+const map = require('map-obj');
+
+function mapToArray(obj, fn) {
+	let idx = 0;
+	const result = map(obj, (key, value) =>
+    // 把每一个key和value同时传给callback。让callback去处理
+		[idx++, fn(key, value)]
+	);
+  // 转化类数组成真正的数组
+	result.length = idx;
+	return Array.from(result);
+}
+
+module.exports = mapToArray;
+```
+
+
+
+### swap-array
+
+交换数组两项的位置
+
+[地址](https://github.com/michaelzoidl/swap-array)
+
+##### Usage
+
+```js
+import SwapArray from 'swap-array';
+
+var SomeArray = ['thats','cool','dude'];
+
+SwapArray(SomeArray, 0, 2);
+// ['dude','thats','cool'];
+```
+
+```js
+export default (Arr, Caller, Target) => {
+  let Instance = Arr.constructor();
+  let Stash = Arr;
+
+  let InstanceType = Array.isArray(Instance) ? 'array' : typeof Instance;
+
+  // Check types and throw err if no arr is passed
+  if(InstanceType !== 'array') throw '[ERR] SwapArray expects a array as first param';
+
+  // Copy the Arr-Content into new Instance - so we don't overwrite the passed array
+  // 浅复制一个数组 ，避免用splice影响原数组
+  Stash.map((s, i) => Instance[i] = s);
+
+  // Update indexes
+  // 使用splice删除目标位置并返回对应的项，返回的是个数组，所以要用[0]
+  // 由于换位置,所以把caller和target的地方交换
+  Instance[Caller] = Instance.splice(Target, 1, Instance[Caller])[0];
+
+  return Instance;
+}
+```
