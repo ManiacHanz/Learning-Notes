@@ -98,3 +98,111 @@ module.exports = (obj, predicate) => {
 	return ret;
 };
 ```
+
+
+### zipmap
+
+> Returns a map with the keys mapped to the corresponding vals. zipmap also accepts a single value of objects or pairs.
+
+[地址](https://github.com/landau/zipmap)
+
+可以把2个数组对应合并成对象数组，或者把一个对象数组或二维数组格式化。主要可以学习下`reduce` 的用法
+
+*Usage*
+
+```js
+// 1
+var keys = ['a', 'b', 'c'];
+var vals = [1, 2, 3];
+
+var map = zipmap(keys, vals);
+assert.deepEqual(map, { a: 1, b: 2, c: 3 });
+
+// 2
+var objs = [
+  { key: 'foo', value: 'bar' },
+  { key: 'hi', value: 'bye' },
+];
+
+var out = {
+  foo: 'bar',
+  hi: 'bye'
+};
+
+var map = zipmap(objs);
+assert.deepEqual(map, out);
+
+// 3
+var pairs = [
+  ['foo', 'bar'],
+  ['hi', 'bye']
+];
+
+var out = {
+  foo: 'bar',
+  hi: 'bye'
+};
+
+var map = zipmap(pairs);
+assert.deepEqual(map, out);
+```
+
+
+上源码
+
+这里可以学习一下，暴露的函数主要是做一个类似于策略模式的排错功能，而正常情况再把`_zipmap`核心函数`return`出来
+
+```js
+function isObj(o) {
+  return toString(o) === '[object Object]';
+}
+
+module.exports = function zipmap(keys, vals) {
+  if (!vals) {
+    if (Array.isArray(keys) && !keys.length) return {};
+    if (Array.isArray(keys[0])) return zipmapPairs(keys);
+    if (isObj(keys[0])) return zipmapObj(keys);
+    throw new TypeError('Expected vals to be an array');
+  }
+
+  return _zipmap(keys, vals);
+};
+```
+
+`_zipmap`是*Usage*里的第一个情况
+
+```js
+function _zipmap(keys, vals) {
+	// 使用长度更短的来reduce
+  var shorter = keys.length > vals.length ? vals : keys;
+	// 第三个参数是 当前的index。所以一一对应着形成对象
+  return shorter.reduce(function(map, val, idx) {
+    map[keys[idx]] = vals[idx];
+    return map;
+  }, {});
+
+}
+```
+
+`zipmapObj`对应的是第二种情况，但是对象必须以`key` `value`这样的格式
+
+```js
+function zipmapObj(objs) {
+  return objs.reduce(function(map, o) {
+		// 必须是key - value
+    map[o.key] = o.value;
+    return map;
+  }, {});
+}
+```
+
+`zipmapPairs`对应的是第三种情况，以数组第一位做key，第二位做value
+
+```js
+function zipmapPairs(pairs) {
+  return pairs.reduce(function(map, pair) {
+    map[pair[0]] = pair[1];
+    return map;
+  }, {});
+}
+```
