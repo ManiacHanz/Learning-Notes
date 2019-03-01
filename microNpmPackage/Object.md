@@ -206,3 +206,110 @@ function zipmapPairs(pairs) {
   }, {});
 }
 ```
+
+
+### deep-assign
+
+相当于“深递归”版的`Object.assign`
+
+[地址](https://github.com/sindresorhus/deep-assign)（目前这个库已被废弃，作者推荐[lodash.merge](https://lodash.com/docs/4.17.11#merge)）
+
+*Usage*
+
+```js
+var deepAssign = require('deep-assign');
+
+deepAssign({a: {b: 0}}, {a: {b: 1, c: 2}}, {a: {c: 3}});
+//=> {a: {b: 1, c: 3}}
+```
+
+还是有一些关于`Object`的操作和思路可以学习，稍微看一下吧
+
+依然是暴露的函数只做简单的容错处理和核心处理，学习这种封装思路，看起来清爽简单
+
+```js
+// 保证传入的东西是一个 obj 的容错方法。后面分析默认所有的都是obj类型
+function toObject(val) {
+	if (val === null || val === undefined) {
+		throw new TypeError('Cannot convert undefined or null to object');
+	}
+
+	return Object(val);
+}
+
+module.exports = function deepAssign(target) {
+	target = toObject(target);
+	// 由于会覆盖target ，所以不需要关注 arguments到底有几个，
+	// 有点类似于 assign(target,arguments[1])(arguments[2])...这种思路的处理
+	for (var s = 1; s < arguments.length; s++) {
+		assign(target, arguments[s]);
+	}
+
+	return target;
+};
+```
+
+```js
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+var propIsEnumerable = Object.prototype.propertyIsEnumerable;
+
+function assign(to, from) {
+	// 同一个直接返回
+	if (to === from) {
+		return to;
+	}
+
+	from = Object(from);
+	// for .. in 会循环到原型链上的方法，而hasOwnProperty可以把非自身的排除掉
+	for (var key in from) {
+		if (hasOwnProperty.call(from, key)) {
+			// 根据key来assign对象
+			assignKey(to, from, key);
+		}
+	}
+	// getOwnPropertySymbols 方法返回一个给定对象自身的所有 Symbol 属性的数组。
+	if (Object.getOwnPropertySymbols) {
+		var symbols = Object.getOwnPropertySymbols(from);
+
+		for (var i = 0; i < symbols.length; i++) {
+			// 保证可以枚举
+			if (propIsEnumerable.call(from, symbols[i])) {
+				assignKey(to, from, symbols[i]);
+			}
+		}
+	}
+	// 这里返回值好像没什么用，作者是直接修改原值
+	return to;
+}
+```
+
+
+```js
+function assignKey(to, from, key) {
+	var val = from[key];
+	// undefined或者null的 不会被合并
+	if (val === undefined || val === null) {
+		return;
+	}
+	
+	if (hasOwnProperty.call(to, key)) {
+		if (to[key] === undefined || to[key] === null) {
+			throw new TypeError('Cannot convert undefined or null to object (' + key + ')');
+		}
+	}
+	// 如果 to上面没有这个属性 或者 val不是个对象就直接更改值
+	if (!hasOwnProperty.call(to, key) || !isObj(val)) {
+		to[key] = val;
+	} else {
+		// 否则就递归调用
+		// 这样就保证了 是deep-assign，而不是from 的val去覆盖了to的val
+		// 这个递归思想还是很巧妙
+		to[key] = assign(Object(to[key]), from[key]);
+	}
+}
+```
+
+总结 
+* 递归思想很巧妙
+* `Object`的`key`的循环与自身属性
