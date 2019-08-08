@@ -49,7 +49,7 @@ _.debounce = function(func, wait, immediate){
         // 而比如窗口的大小变化等连续变化后再执行，则不需出传这个参数
         if(callNow) {
             result = func.apply(context, args)
-            contest = args = null   // 释放闭包的不必要变量
+            context = args = null   // 释放闭包的不必要变量
         }
         return result
     }
