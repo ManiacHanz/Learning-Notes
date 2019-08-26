@@ -121,7 +121,7 @@ class Slider extends React.Component {
         if (isNotControlled) {
             this.setState(nextState);
         }
-
+        // 这里重置了 可以达到按step前进的效果
         const changedValue = nextState.value;
         // onChange钩子
         props.onChange(changedValue);
@@ -143,7 +143,7 @@ class Slider extends React.Component {
         // 点击滑块本省就会retrun 
         // 如果是点的进度条的位置，相当于移动了slider
         if (value === prevValue) return;
-
+        // 这里是为了后面通过ref选中数组的第一项
         this.prevMovedHandleIndex = 0;
 
         this.onChange({ value });
@@ -226,20 +226,22 @@ class Slider extends React.Component {
         } = this.props;
         const { value, dragging } = this.state;
         const offset = this.calcOffset(value);
+        // 这里没找到handleGenerator的方法定义在何处
+        // saveHandle在hoc里
         const handle = handleGenerator({
-        className: `${prefixCls}-handle`,
-        prefixCls,
-        vertical,
-        offset,
-        value,
-        dragging,
-        disabled,
-        min,
-        max,
-        index: 0,
-        tabIndex,
-        style: handleStyle[0] || handleStyle,
-        ref: h => this.saveHandle(0, h),
+            className: `${prefixCls}-handle`,
+            prefixCls,
+            vertical,
+            offset,
+            value,
+            dragging,
+            disabled,
+            min,
+            max,
+            index: 0,
+            tabIndex,
+            style: handleStyle[0] || handleStyle,
+            ref: h => this.saveHandle(0, h),
         });
 
         const _trackStyle = trackStyle[0] || trackStyle;
@@ -262,3 +264,327 @@ class Slider extends React.Component {
 }
 ```
 
+总分来说，`Slider`里主要声明的函数都是在事件监听时绑定的函数，或者是处理对外界的钩子函数。但是组件内并没有调用这些函数
+
+接下来`createSlider`，也就是真正暴露的`Slider`
+
+```js
+export default function createSlider(Component) {
+  return class ComponentEnhancer extends Component {
+    static displayName = `ComponentEnhancer(${Component.displayName})`;
+
+    static defaultProps = {
+      ...Component.defaultProps,
+      prefixCls: 'rc-slider',
+      min: 0,
+      max: 100,
+      step: 1,
+      marks: {},
+      handle({ index, ...restProps }) {
+        delete restProps.dragging;
+        if (restProps.value === null) {
+          return null;
+        }
+
+        return <Handle {...restProps} key={index} />;
+      },
+        // rest...
+    };
+
+    constructor(props) {
+      super(props);
+
+      this.handlesRefs = {};
+    }
+
+    componentDidMount() {
+      // Snapshot testing cannot handle refs, so be sure to null-check this.
+      // ownerDocument 会找到html里的document
+      this.document = this.sliderRef && this.sliderRef.ownerDocument;
+
+        // ant mobile里没有autoFocus  这里不看
+    }
+
+    componentWillUnmount() {
+        // 先执行父组件的钩子，再执行自己的逻辑
+      if (super.componentWillUnmount) super.componentWillUnmount();
+      this.removeDocumentEvents();
+    }
+
+    // onMouseDown和onTouchStart逻辑类似，只是一个是给pc端一个是移动端
+    // 都是触发onStart,并且增加监听
+    onMouseDown = (e) => {
+      if (e.button !== 0) { return; }
+
+      const isVertical = this.props.vertical;
+      let position = utils.getMousePosition(isVertical, e);
+      // handlesRefs 是handle 组件的refs
+      // 也就是说 如果e.target不是handle组件的话 
+      // 是点到slider条上的某个位置，就是把拖动距离设置成0
+      // 如果是点到handle上面的话，就要去获取e.target的位置
+      // 然后再算出this.dragOffset
+      if (!utils.isEventFromHandle(e, this.handlesRefs)) {
+        this.dragOffset = 0;
+      } else {
+          // getHandleCenterPosition 是根据props.vertical做的兼容位置处理
+        const handlePosition = utils.getHandleCenterPosition(isVertical, e.target);
+        this.dragOffset = position - handlePosition;
+        position = handlePosition;
+      }
+      // 鼠标端需要先remove mouseMove和mouseUp的监听？？？
+      this.removeDocumentEvents();
+      // onStart事件 是在Slider里定义的 可以在上面看解析
+      // 主要作用 触发了回调，同时根绝position改变位置（setState）
+      this.onStart(position);
+      // 添加鼠标事件监听
+      this.addDocumentMouseEvents();
+    }
+
+    onTouchStart = (e) => {
+      if (utils.isNotTouchEvent(e)) return;
+
+      const isVertical = this.props.vertical;
+      let position = utils.getTouchPosition(isVertical, e);
+      if (!utils.isEventFromHandle(e, this.handlesRefs)) {
+        this.dragOffset = 0;
+      } else {
+        const handlePosition = utils.getHandleCenterPosition(isVertical, e.target);
+        this.dragOffset = position - handlePosition;
+        position = handlePosition;
+      }
+      // 但是这里没有removeDocumentEvents
+      this.onStart(position);
+      this.addDocumentTouchEvents();
+      // 触摸事件不同的是需要阻止默认事件已经事件冒泡
+      utils.pauseEvent(e);
+    }
+    // onFocus没有这个接口 ，先不看了，大体
+    onFocus = (e) => {
+      const { onFocus, vertical } = this.props;
+      if (utils.isEventFromHandle(e, this.handlesRefs)) {
+        const handlePosition = utils.getHandleCenterPosition(vertical, e.target);
+        this.dragOffset = 0;
+        this.onStart(handlePosition);
+        utils.pauseEvent(e);
+        if (onFocus) {
+          onFocus(e);
+        }
+      }
+    }
+
+    onBlur = (e) => {
+      const { onBlur } = this.props;
+      this.onEnd();
+      if (onBlur) {
+        onBlur(e);
+      }
+    };
+
+    onMouseUp = () => {
+        // 在onStart中 this.prevMovedHandleIndex被重置成0
+        // 所以是选refs里的第一个
+      if (this.handlesRefs[this.prevMovedHandleIndex]) {
+        this.handlesRefs[this.prevMovedHandleIndex].clickFocus();
+      }
+    }
+
+    onMouseMove = (e) => {
+        // 这里不知道是为了兼容什么情况
+      if (!this.sliderRef) {
+        this.onEnd();
+        return;
+      }
+        // onMove触发setState
+      const position = utils.getMousePosition(this.props.vertical, e);
+      this.onMove(e, position - this.dragOffset);
+    }
+
+    onTouchMove = (e) => {
+      if (utils.isNotTouchEvent(e) || !this.sliderRef) {
+        this.onEnd();
+        return;
+      }
+
+      const position = utils.getTouchPosition(this.props.vertical, e);
+      this.onMove(e, position - this.dragOffset);
+    }
+
+    onKeyDown = (e) => {
+      if (this.sliderRef && utils.isEventFromHandle(e, this.handlesRefs)) {
+        this.onKeyboard(e);
+      }
+    }
+    // 根据mark标记来移动，就不需要计算位置了
+    onClickMarkLabel = (e, value) => {
+      e.stopPropagation();
+      this.onChange({ value });
+      this.setState({ value }, () => this.onEnd(true));
+    }
+    // 获取slider开始的位置
+    getSliderStart() {
+      const slider = this.sliderRef;
+      const rect = slider.getBoundingClientRect();
+
+      return this.props.vertical ? rect.top : (rect.left + window.pageXOffset);
+    }
+    // 根据vertical兼容获取slider整体的长度
+    getSliderLength() {
+      const slider = this.sliderRef;
+      if (!slider) {
+        return 0;
+      }
+
+      const coords = slider.getBoundingClientRect();
+      return this.props.vertical ? coords.height : coords.width;
+    }
+
+    addDocumentTouchEvents() {
+      // just work for Chrome iOS Safari and Android Browser
+      this.onTouchMoveListener = addEventListener(this.document, 'touchmove', this.onTouchMove);
+      this.onTouchUpListener = addEventListener(this.document, 'touchend', this.onEnd);
+    }
+
+    addDocumentMouseEvents() {
+      this.onMouseMoveListener = addEventListener(this.document, 'mousemove', this.onMouseMove);
+      this.onMouseUpListener = addEventListener(this.document, 'mouseup', this.onEnd);
+    }
+
+    removeDocumentEvents() {
+      /* eslint-disable no-unused-expressions */
+      this.onTouchMoveListener && this.onTouchMoveListener.remove();
+      this.onTouchUpListener && this.onTouchUpListener.remove();
+
+      this.onMouseMoveListener && this.onMouseMoveListener.remove();
+      this.onMouseUpListener && this.onMouseUpListener.remove();
+      /* eslint-enable no-unused-expressions */
+    }
+
+    focus() {
+      if (!this.props.disabled) {
+        this.handlesRefs[0].focus();
+      }
+    }
+
+    blur() {
+      if (!this.props.disabled) {
+        Object.keys(this.handlesRefs).forEach((key) => {
+          if (this.handlesRefs[key] && this.handlesRefs[key].blur) {
+            this.handlesRefs[key].blur();
+          }
+        });
+      }
+    }
+    // 算法
+    calcValue(offset) {
+      const { vertical, min, max } = this.props;
+      // 保证不是负数 算出百分比
+      const ratio = Math.abs(Math.max(offset, 0) / this.getSliderLength());
+      // 计算出应该的位置的算法
+      const value = vertical ? (1 - ratio) * (max - min) + min : ratio * (max - min) + min;
+      return value;
+    }
+    // 根据position得到一个合理的值，用来setState等
+    calcValueByPos(position) {
+        // position - 起始位置 = 相对偏移量
+      const pixelOffset = position - this.getSliderStart();
+      const nextValue = this.trimAlignValue(this.calcValue(pixelOffset));
+      return nextValue;
+    }
+
+    // 通过value反过去算offset
+    calcOffset(value) {
+      const { min, max } = this.props;
+      const ratio = (value - min) / (max - min);
+      return ratio * 100;
+    }
+
+    saveSlider = (slider) => {
+      this.sliderRef = slider;
+    }
+
+    saveHandle(index, handle) {
+      this.handlesRefs[index] = handle;
+    }
+
+    render() {
+      const {
+        prefixCls,
+        className,
+        marks,
+        dots,
+        step,
+        included,
+        disabled,
+        vertical,
+        min,
+        max,
+        children,
+        maximumTrackStyle,
+        style,
+        railStyle,
+        dotStyle,
+        activeDotStyle,
+      } = this.props;
+      const { tracks, handles } = super.render();
+
+      const sliderClassName = classNames(prefixCls, {
+        [`${prefixCls}-with-marks`]: Object.keys(marks).length,
+        [`${prefixCls}-disabled`]: disabled,
+        [`${prefixCls}-vertical`]: vertical,
+        [className]: className,
+      });
+      return (
+        <div
+          ref={this.saveSlider}
+          className={sliderClassName}
+          onTouchStart={disabled ? noop : this.onTouchStart}
+          onMouseDown={disabled ? noop : this.onMouseDown}
+          onMouseUp={disabled ? noop : this.onMouseUp}
+          onKeyDown={disabled ? noop : this.onKeyDown}
+          onFocus={disabled ? noop : this.onFocus}
+          onBlur={disabled ? noop : this.onBlur}
+          style={style}
+        >
+          <div
+            className={`${prefixCls}-rail`}
+            style={{
+              ...maximumTrackStyle,
+              ...railStyle,
+            }}
+          />
+          {tracks}
+          <Steps
+            prefixCls={prefixCls}
+            vertical={vertical}
+            marks={marks}
+            dots={dots}
+            step={step}
+            included={included}
+            lowerBound={this.getLowerBound()}
+            upperBound={this.getUpperBound()}
+            max={max}
+            min={min}
+            dotStyle={dotStyle}
+            activeDotStyle={activeDotStyle}
+          />
+          {handles}
+          <Marks
+            className={`${prefixCls}-mark`}
+            onClickLabel={disabled ? noop : this.onClickMarkLabel}
+            vertical={vertical}
+            marks={marks}
+            included={included}
+            lowerBound={this.getLowerBound()}
+            upperBound={this.getUpperBound()}
+            max={max}
+            min={min}
+          />
+          {children}
+        </div>
+      );
+    }
+  };
+}
+
+
+```
