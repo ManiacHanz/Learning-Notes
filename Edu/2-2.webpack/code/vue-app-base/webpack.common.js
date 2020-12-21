@@ -1,8 +1,8 @@
 const path = require('path')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 module.exports = {
 	mode: 'none',
@@ -27,16 +27,17 @@ module.exports = {
 			// 以及 `.vue` 文件中的 `<style>` 块
 			{
 				test: /\.css$/,
-				use: ['vue-style-loader', 'css-loader'],
+				use: [
+					// 'vue-style-loader',
+					MiniCssExtractPlugin.loader,
+					'css-loader',
+				],
 			},
 			{
 				test: /\.less$/,
-				// use: ExtractTextPlugin.extract({
-				// 	fallback: 'style-loader',
-				// 	use: ['css-loader', 'less-loader'],
-				// }),
 				use: [
-					'style-loader', // creates style nodes from JS strings
+					// 'style-loader', // creates style nodes from JS strings
+					MiniCssExtractPlugin.loader,
 					'css-loader', // translates CSS into CommonJS
 					'less-loader', // compiles Less to CSS
 				],
@@ -67,8 +68,6 @@ module.exports = {
 			},
 			template: './public/index.html',
 		}),
-		// new ExtractTextPlugin({
-		// 	filename: '[name].css',
-		// }),
+		new MiniCssExtractPlugin(),
 	],
 }
