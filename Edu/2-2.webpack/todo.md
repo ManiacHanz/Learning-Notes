@@ -12,3 +12,5 @@
 - [ ] 看一下HMR的hot API文档，以及在框架中的处理（比如vue和react的hmr如何保存状态）
 
 - [ ] tree shaking原理。结合打包文件bundle.js的结构，以及webpack的模块函数`__webpack.require__`去研究一下
+
+- [ ] 看下husky对`.git/hooks`的修改原理

@@ -34,10 +34,13 @@ webpack只是**打包工具**
 
 1. `clean-webpack-plugin`。清理文件夹
 
-2. `html-webpack-plugin`。软编码自动生成`html`文件。注意配置属性，来修改html文件中的各个配置
+2. `html-webpack-plugin`。软编码自动生成`html`文件。注意配置属性，来修改html文件中的各个配置。[配置文档](https://github.com/jantimon/html-webpack-plugin#configuration)
 
 3. `copy-webpack-plugin`。单纯的拷贝文件
 
+4. `MiniCssExtractPlugin`。提取css语句到css文件。[git仓库](https://github.com/webpack-contrib/mini-css-extract-plugin)
+
+5. `OptimizeCssAssetsWebpackPlugin`。压缩单独提取过的css文件。也可使用[官方推荐](https://webpack.js.org/plugins/mini-css-extract-plugin/#minimizing-for-production)
 
 ### dev-server
 
@@ -120,3 +123,35 @@ production mode下自动开启
 }
 ```
 
+#### splitChunks
+
+`common-chunk-plugin`
+
+### Hash
+
+[文档](https://www.webpackjs.com/guides/caching/)
+
+* hash 项目级别hash，所有文件都会改变
+* chunkhash 根据chunk创建不同的hash, 同一个chunk会使用同一个hash
+* contenthash 根据内容不同而改变的hash
+
+
+## RollUp
+
+### 模块规范
+
+默认使用ESM，CMD需要配置`rollup-plugin-commonjs`插件来实现
+
+### 代码拆分及多入口
+
+rollup代码拆分和多入口文件不能使用iife，只能使用amd标准
+
+
+缺点：第三方模块，HMR
+优点：打包出来的模块在一个作用域，没有多余的代码
+
+
+## lint
+
+* husky用来使用package.json完成对.git/hooks的sh脚本编写
+* lint-stage配合husky可以完成复合指令
