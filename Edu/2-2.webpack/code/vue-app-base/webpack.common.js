@@ -13,6 +13,21 @@ module.exports = {
 	},
 	module: {
 		rules: [
+			// eslint
+			{
+				enforce: 'pre',
+				test: /.(js|vue)$/,
+				exclude: [/node_modules/, /dist/],
+				use: [
+					{
+						loader: 'eslint-loader',
+						options: {
+							fix: true,
+							failOnError: true,
+						},
+					},
+				],
+			},
 			{
 				test: /\.vue$/,
 				use: 'vue-loader',
@@ -22,6 +37,7 @@ module.exports = {
 			{
 				test: /\.js$/,
 				use: 'babel-loader',
+				exclude: /node_modules/,
 			},
 			// 它会应用到普通的 `.css` 文件
 			// 以及 `.vue` 文件中的 `<style>` 块
@@ -43,13 +59,14 @@ module.exports = {
 				],
 			},
 			{
-				test: /\.(png|svg|jpg|gif)$/,
+				test: /\.(png|svg|jpe?g|gif)$/,
 				use: [
 					{
 						loader: 'url-loader',
 						options: {
 							limit: 4 * 1024,
 							esModule: false,
+							name: '[name].[hash:6].[ext]',
 						},
 					},
 				],
@@ -64,7 +81,7 @@ module.exports = {
 			title: '自定义webpack项目',
 			// favicon: path.join(__dirname, 'public/favicon.ico'),
 			templateParameters: {
-				BASE_URL: './',
+				BASE_URL: './public/',
 			},
 			template: './public/index.html',
 		}),

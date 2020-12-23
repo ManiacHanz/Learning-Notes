@@ -6,11 +6,11 @@ import './style.less'
 Vue.config.productionTip = false
 
 new Vue({
-	render: h => h(App),
+  render: h => h(App)
 }).$mount('#app')
 
-if (module.hot) {
-	module.hot.accept('./main.js', function () {
-		console.log('....hot replacement...')
-	})
-}
+// if (module.hot) {
+// 	module.hot.accept('./main.js', function() {
+// 		console.log('....hot replacement...')
+// 	})
+// }
