@@ -41,3 +41,8 @@ exports.data = {
   pkg: require(joinPath("./package.json")),
   data: new Date(),
 };
+
+exports.config = {
+  port: 8080,
+  open: false
+}
