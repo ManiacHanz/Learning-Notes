@@ -1,8 +1,11 @@
-import VueRouter from 'vue-router'
+import Vue from 'vue'
+// import VueRouter from 'vue-router'
+import MyRouter from '../../myRoute'
 import Foo from '@/components/Foo'
 import HelloWorld from '@/components/HelloWorld'
 import Bar from '@/components/Bar'
 // import MyRouter from '../../myRoute'
+Vue.use(MyRouter)
 
 const routes = [
   { path: '/hello', component: HelloWorld },
@@ -12,12 +15,12 @@ const routes = [
 
 // 3. 创建 router 实例，然后传 `routes` 配置
 // 你还可以传别的配置参数, 不过先这么简单着吧。
-const router = new VueRouter({
-  routes // (缩写) 相当于 routes: routes
-})
-
-// const router = new MyRouter({
-//   routes
+// const router = new VueRouter({
+//   routes // (缩写) 相当于 routes: routes
 // })
+
+const router = new MyRouter({
+  routes
+})
 
 export default router

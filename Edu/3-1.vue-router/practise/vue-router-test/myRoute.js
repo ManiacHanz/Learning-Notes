@@ -4,19 +4,17 @@ let _Vue
 class MyRouter {
   //见下方注释1 Vue关于use的一部分源码
   static install(Vue) {
-    console.log('install counts...')
     if(MyRouter.install.isInstalled && _Vue === Vue) return
     // 避免重复安装插件 
     MyRouter.install.isInstalled = true
     _Vue = Vue
-    console.log(12, Vue)
     // 使用Vue的全局混入
     // 相当于修改全局vue实例
     // 所有组件和实例上都会执行这个生命周期
     Vue.mixin({
       beforeCreate(){
         // 实例上面能拿到再挂载，组件上面没有 不需要挂载
-        if(this.$options.$router) {
+        if(this.$options.router) {
           Vue.prototype.$router = this.$options.router   // 注意，这里的this.$options是Vue 实例的初始化选项 代表的是new Vue({router})这里的参数
         }
       }
@@ -25,7 +23,6 @@ class MyRouter {
     // 挂载$router和$route属性
     // Object.defineProperty(Vue.prototype, '$router')
   
-    
   }
 
   // 这里的构造函数不完整，缺少做到能够new VueRouter({})返回router的能力
@@ -37,6 +34,7 @@ class MyRouter {
     this.data = _Vue.observable({       // 源码这里是使用defineReactive定义响应式到组件实例this.history上面
       current: '/'
     })
+    this.createRouteMap()
     this.initComponent()
   }
   // 源码是个更复杂的记录路由信息的处理函数
@@ -54,11 +52,14 @@ class MyRouter {
       props: {
         to: String        // 简单模拟<router-link>的属性
       },
-      // methods: {
-      //   click(e) {
-      //     e.preventDefault()
-      //   }
-      // },
+      methods: {
+        click(e) {
+          e.preventDefault()
+          console.log(this.to)
+          history.pushState({}, '', this.to)
+          this.$router.data.current = this.to    // 这个是在组件的作用域中，所以应该通过原型链网上找到$router去拿挂载的data
+        }
+      },
       // render函数参考Vue文档的组件部分
       // 注意这里不能用箭头函数，因为this指向
       render(h){ 
@@ -66,18 +67,16 @@ class MyRouter {
           attrs: {
             href: this.to
           },
-          // on: {
-          //   click: this.click
-          // }
+          on: {
+            click: this.click
+          }
         }, [this.$slots.default]) 
       }  // 第三个参数是子节点，所以记住是数组
     })
 
     _Vue.component('router-view', {
-      props: {
-        
-      },
       render(h){
+        console.log(78,self.routerMap, self.data.current )
         const component = self.routerMap[self.data.current]
         return h(component)
       }
