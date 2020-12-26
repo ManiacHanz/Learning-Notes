@@ -1,9 +1,6 @@
 const path = require('path')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
-const {
-	CleanWebpackPlugin,
-} = require('clean-webpack-plugin')
-const HtmlWebpackPlugin = require('html-webpack-plugin')
+
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 
 module.exports = {
@@ -79,15 +76,16 @@ module.exports = {
 	plugins: [
 		// 请确保引入这个插件！
 		new VueLoaderPlugin(),
-		new CleanWebpackPlugin(),
-		new HtmlWebpackPlugin({
-			title: '自定义webpack项目',
-			// favicon: path.join(__dirname, 'public/favicon.ico'),
-			templateParameters: {
-				BASE_URL: './public/',
-			},
-			template: './public/index.html',
-		}),
+		// new CleanWebpackPlugin(),
+		// new HtmlWebpackPlugin({
+		// 	title: '自定义webpack项目',
+		// 	// favicon: path.join(__dirname, 'public/favicon.ico'),
+		// 	templateParameters: {
+		// 		BASE_URL: './public/',
+		// 	},
+		// 	template: './public/index.html',
+		// 	// filename: '../index.html'
+		// }),
 		new MiniCssExtractPlugin(),
 	],
 }
