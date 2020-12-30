@@ -85,6 +85,9 @@ class MyRouter {
 
     _Vue.component('router-view', {
       render(h){
+        // hash这里可以不用看self.data的值了
+        // 可以通过hashChange事件，获取到location.hash
+        // 然后渲染对应的组件
         console.log(78,self.routerMap, self.data.current )
         const component = self.routerMap[self.data.current]
         return h(component)
