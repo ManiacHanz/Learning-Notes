@@ -1,6 +1,10 @@
 
 let _Vue
 
+const defaultOpts = {
+  mode: 'hash'
+}
+
 class MyRouter {
   //见下方注释1 Vue关于use的一部分源码
   static install(Vue) {
@@ -20,14 +24,11 @@ class MyRouter {
       }
     })
   
-    // 挂载$router和$route属性
-    // Object.defineProperty(Vue.prototype, '$router')
-  
   }
 
   // 这里的构造函数不完整，缺少做到能够new VueRouter({})返回router的能力
   constructor(options){
-    this.options = options
+    this.options = Object.assign(defaultOpts ,options)
     this.routerMap = {}
     console.log(_Vue)
     // 这里的data，先将就记录下当前路由地址
@@ -46,7 +47,9 @@ class MyRouter {
   }
 
   initComponent(){
+    // 保存MyRoute实例
     const self = this
+    const mode = self.options.mode
     // install方法还需要挂载组件
     _Vue.component('router-link', {
       props: {
@@ -55,9 +58,15 @@ class MyRouter {
       methods: {
         click(e) {
           e.preventDefault()
-          console.log(this.to)
-          history.pushState({}, '', this.to)
-          this.$router.data.current = this.to    // 这个是在组件的作用域中，所以应该通过原型链网上找到$router去拿挂载的data
+          const historyChange = (dest) => {
+            history.pushState({}, '', dest)
+            this.$router.data.current = dest    // 这个是在组件的作用域中，所以应该通过原型链网上找到$router去拿挂载的data
+          }
+          const hashChange = (dest) => {
+            location.href = location.origin + '/#' + dest
+            this.$router.data.current = dest
+          }
+          mode === 'history' ? historyChange(this.to) : hashChange(this.to)
         }
       },
       // render函数参考Vue文档的组件部分
@@ -65,7 +74,7 @@ class MyRouter {
       render(h){ 
         return h('a', {
           attrs: {
-            href: this.to
+            href: mode === 'history' ? this.to : `#${this.to}`
           },
           on: {
             click: this.click
