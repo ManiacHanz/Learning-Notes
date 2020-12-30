@@ -6,17 +6,32 @@
   <title>Document</title>
 </head>
 <body>
-  <div id="#app">
+  <div id="app">
     <span>{{ msg }}</span>
+    <h2 v-text="msg"></h2>
+    <h2 v-text="name"></h2>
+    <input v-model="name"></input>
+    <div v-html='html'></div>
+    <button v-on:click="clickHandler">点击</button>
   </div>
+  <script src="js/dependecy.js"></script>
+  <script src="js/watcher.js"></script>
+  <script src="js/compiler.js"></script>
+  <script src="js/observer.js"></script>
   <script src='js/vue.js'></script>
   <script>
     let vm = new Vue({
       el: '#app',
       data: {
-        msg: 'test'
+        msg: 'test',
+        name: 'xiaoming',
+        html: '<h3 >this is html...</h3>'
       },
-      
+      method: {
+        clickHandler() {
+          this.html='<span>change html...</span>'
+        }
+      }
     })
   </script>
 </body>
