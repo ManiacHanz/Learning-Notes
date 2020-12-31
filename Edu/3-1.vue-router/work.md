@@ -39,3 +39,8 @@ let vm = new Vue({
 [作业](./practise/vue/compiler)
 
 3、参考 Snabbdom 提供的电影列表的示例，利用Snabbdom 实现类似的效果，如图：
+
+参考了官方例子简单实现了列表渲染、排序、添加列表项
+修复了例子中`eventListener`传参的问题
+
+[作业](./practise/snabbdom)
