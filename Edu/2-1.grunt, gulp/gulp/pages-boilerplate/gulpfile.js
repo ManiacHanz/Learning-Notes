@@ -4,19 +4,18 @@ const sass = require("gulp-sass");
 const babel = require("gulp-babel");
 const swig = require("gulp-swig");
 const browserSync = require("browser-sync").create();
-const gulpIf = require('gulp-if')
+const gulpIf = require("gulp-if");
 const htmlmin = require("gulp-htmlmin");
-const uglify = require('gulp-uglify')
-const cleanCss = require('gulp-clean-css')
+const uglify = require("gulp-uglify");
+const cleanCss = require("gulp-clean-css");
 const ur = require("gulp-useref");
 const gulpClean = require("gulp-clean");
-
 
 const { data, config } = require("./config/constance");
 
 const path = require("path");
 const cwd = process.cwd();
-const argv = process.argv
+const argv = process.argv;
 
 const joinPath = (p) => path.resolve(cwd, p);
 
@@ -30,25 +29,24 @@ const cleanDist = () => {
     gulpClean({ force: true })
   );
 };
-const clean = parallel(cleanDist, cleanTmp)
-
+const clean = parallel(cleanDist, cleanTmp);
 
 const styles = (done) => {
-  return src("src/assets/styles/*.scss", {base:'src'})
+  return src("src/assets/styles/*.scss", { base: "src" })
     .pipe(sass({ outputStyle: "expanded" }).on("error", sass.logError))
     .pipe(dest(".tmp"))
-    .pipe(browserSync.reload({ stream: true }))
+    .pipe(browserSync.reload({ stream: true }));
 };
 
 const scripts = () => {
-  return src("src/assets/scripts/*.js", {base: 'src'})
+  return src("src/assets/scripts/*.js", { base: "src" })
     .pipe(
       babel({
         presets: ["@babel/env"],
       })
     )
     .pipe(dest(".tmp"))
-    .pipe(browserSync.reload({ stream: true }))
+    .pipe(browserSync.reload({ stream: true }));
 };
 
 const html = () => {
@@ -56,13 +54,13 @@ const html = () => {
     data,
     defaults: { cache: false },
   };
-  return src("src/**/*.html", {base: 'src'})
+  return src("src/**/*.html", { base: "src" })
     .pipe(swig(opts))
     .pipe(dest(".tmp"))
-    .pipe(browserSync.reload({ stream: true }))
+    .pipe(browserSync.reload({ stream: true }));
 };
 
-const compile = parallel(styles, scripts, html)
+const compile = parallel(styles, scripts, html);
 
 const server = () => {
   watch("src/**/*.scss", { cwd }, styles);
@@ -71,24 +69,27 @@ const server = () => {
 
   watch(
     "assets/images/**/*.{jpg,jpeg,png,gif,svg}",
-    {cwd: 'src'},
+    { cwd: "src" },
     browserSync.reload
   );
   watch(
     "assets/fonts/**/*.{eot,svg,ttf,woff,woff2}",
-    {cwd: 'src'},
+    { cwd: "src" },
     browserSync.reload
   );
 
   // 获取端口
-  const [port, open] = argv.reduce((pre, curr) => {
-    if(curr.includes('--port')) {
-      const [str, p] = curr.split('=')
-      return [Number(p), pre[1]]
-    }
-    if(curr === '--open') return [pre[0], true]
-    return pre
-  }, [config.port, config.open])
+  const [port, open] = argv.reduce(
+    (pre, curr) => {
+      if (curr.includes("--port")) {
+        const [str, p] = curr.split("=");
+        return [Number(p), pre[1]];
+      }
+      if (curr === "--open") return [pre[0], true];
+      return pre;
+    },
+    [config.port, config.open]
+  );
 
   browserSync.init({
     port,
@@ -109,34 +110,40 @@ const server = () => {
 const serve = series(clean, compile, server);
 
 const image = () => {
-  return src("src/assets/images/**/*.{jpg,jpeg,png,gif,svg}", {base: 'src'}).pipe(dest('dist'))
-}
-
-const font = () => {
-  return src("src/assets/fonts/**/*.{eot,svg,ttf,woff,woff2}", {base: 'src'}).pipe(dest('dist'))
-}
-
-const extra = () => {
-  return src('public/**',  {base: 'public'}).pipe(dest('dist'))
-}
-
-const useref = () => {
-  return src("./.tmp/**/*.html")
-    .pipe(
-      ur({
-        searchPath: [".", ".."],
-      })
-    )
-    // .pipe(gulpIf(/\.js$/, uglify()))
-    // .pipe(gulpIf(/\.css$/, cleanCss()))
-    // .pipe(gulpIf(/\.html$/, htmlmin({collapseWhitespace: true, minifyCSS: true, minifyJS: true})))
-    .pipe(dest("dist"));
+  return src("src/assets/images/**/*.{jpg,jpeg,png,gif,svg}", {
+    base: "src",
+  }).pipe(dest("dist"));
 };
 
+const font = () => {
+  return src("src/assets/fonts/**/*.{eot,svg,ttf,woff,woff2}", {
+    base: "src",
+  }).pipe(dest("dist"));
+};
 
-const build = series(clean, compile,useref, parallel(image, font, extra))
+const extra = () => {
+  return src("public/**", { base: "public" }).pipe(dest("dist"));
+};
+
+const useref = () => {
+  return (
+    src("./.tmp/**/*.html")
+      .pipe(
+        ur({
+          searchPath: ["..", ".", "../.."],
+        })
+      )
+      // .pipe(gulpIf(/\.js$/, uglify()))
+      // .pipe(gulpIf(/\.css$/, cleanCss()))
+      // .pipe(gulpIf(/\.html$/, htmlmin({collapseWhitespace: true, minifyCSS: true, minifyJS: true})))
+      .pipe(dest("dist"))
+  );
+};
+
+const build = series(clean, compile, useref, parallel(image, font, extra));
 
 module.exports = {
   serve,
-  build
-}
+  build,
+  clean,
+};

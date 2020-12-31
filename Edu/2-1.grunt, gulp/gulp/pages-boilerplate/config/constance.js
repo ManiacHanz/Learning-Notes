@@ -1,5 +1,6 @@
 const path = require("path");
-const { joinPath } = require("./utils");
+
+const joinPath = (p) => path.resolve(process.cwd(), p);
 
 exports.data = {
   menus: [
@@ -44,5 +45,5 @@ exports.data = {
 
 exports.config = {
   port: 8080,
-  open: false
-}
+  open: false,
+};
