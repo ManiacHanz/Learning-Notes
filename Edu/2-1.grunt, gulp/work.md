@@ -12,6 +12,8 @@
 答： 脚手架首先需要有一个成熟的架子。然后需要一个cli工具配合。
       cli首先可以接收命令行、，比如使用`commander`[仓库地址](https://github.com/tj/commander.js/blob/HEAD/Readme_zh-CN.md), `yargs`[仓库地址](https://github.com/yargs/yargs)。然后通过nodejs的api，写入或输出规定格式的文件或项目整体。比如通过fs模块，或者调用git clone都可以
 
+[作业](./scaffold) 之前工作项目的部分代码，使用命令clone小程序模板代码
+
 2、尝试使用 Gulp 完成项目的自动化构建
 
 [作业](./gulp/pages-boilerplate)
