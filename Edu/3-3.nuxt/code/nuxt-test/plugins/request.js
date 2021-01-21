@@ -4,10 +4,10 @@ export const request = axios.create({
   baseURL: "https://conduit.productionready.io"
 });
 
-["POST", "PUT"].forEach(method => {
+["post", "put"].forEach(method => {
   request[method] = props =>
     request({
-      method,
+      method: String.prototype.toUpperCase.call(method),
       ...props
     });
 });
@@ -20,7 +20,7 @@ export default ({ store, ...props }) => {
       if (user) {
         const { token } = user;
         if (token) {
-          request.defaults.headers.common["Authorization"] = `Token ${token}`;
+          Object.assign(config.headers, { Authorization: `Token ${token}` });
         }
       }
 

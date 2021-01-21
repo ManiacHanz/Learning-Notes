@@ -87,13 +87,13 @@ export default {
         user: this.user
       };
       const submitHandler = this.isLogin ? login : register;
-      debugger;
+     
       try {
         const res = await submitHandler(data);
 
         this.$store.commit("setUser", res.user);
         Cookie.set("user", res.user); // saving token in cookie for server rendering
-        // this.$router.push("/");
+        this.$router.push("/");
       } catch (error) {
         console.log(error);
         const { errors } = error;

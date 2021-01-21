@@ -65,37 +65,82 @@
             <p>Popular Tags</p>
 
             <div class="tag-list">
-              <a href class="tag-pill tag-default">programming</a>
-              <a href class="tag-pill tag-default">javascript</a>
-              <a href class="tag-pill tag-default">emberjs</a>
-              <a href class="tag-pill tag-default">angularjs</a>
-              <a href class="tag-pill tag-default">react</a>
-              <a href class="tag-pill tag-default">mean</a>
-              <a href class="tag-pill tag-default">node</a>
-              <a href class="tag-pill tag-default">rails</a>
+              <nuxt-link
+                class="tag-default tag-pill"
+                v-for="tag in tags"
+                :key="tag"
+                :to="{
+                path: '/',
+                query: {
+                  tag
+                }
+              }"
+              >{{tag}}</nuxt-link>
             </div>
           </div>
         </div>
       </div>
+      <nav>
+        <ul class="pagination">
+          <li
+            v-for="(num, i) in pages"
+            :key="i"
+            class="page-item"
+            :class="{'active': currentPage == num}"
+          >
+            <nuxt-link
+              class="page-link ng-binding"
+              :to="{
+              path: '/', query: {
+                page: num,
+                tag: $route.query.tag
+              }
+            }"
+            >{{num}}</nuxt-link>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 </template>
 <script>
-import { getArticles } from "@/api/article";
+import { getArticles, getTags } from "@/api/article";
 
 export default {
   name: "Index",
   async asyncData(context) {
+    const {
+      route: { query }
+    } = context;
+    const { page = 1, tab, tag } = query;
+
+    const limit = 10;
+    const offset = limit * (Number(page) - 1);
+
     const params = {
-      limit: 10
+      limit: 10,
+      offset,
+      tab,
+      tag
     };
-    const res = await getArticles(params);
-    console.log(res.articles[0], res.articles[0].author);
+    const [articleRes, tagRes] = await Promise.all([
+      getArticles(params),
+      getTags()
+    ]);
+
+    const { articles, articlesCount } = articleRes;
+    const pages = Math.ceil(articlesCount / params.limit);
+
     return {
-      articles: res.articles,
-      articlesCount: res.articlesCount
+      articles,
+      articlesCount,
+      pages,
+      tags: tagRes.tags,
+      tab,
+      currentPage: page
     };
-  }
+  },
+  watchQuery: ["page"]
 };
 </script>
 

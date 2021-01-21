@@ -17,7 +17,6 @@ export const actions = {
       const parsed = cookieparser.parse(req.headers.cookie);
       try {
         user = JSON.parse(parsed.user);
-        console.log(20, user);
       } catch (err) {
         // No valid cookie found
       }

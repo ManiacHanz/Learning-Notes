@@ -50,6 +50,8 @@
               <button class="btn btn-lg btn-primary pull-xs-right">Update Settings</button>
             </fieldset>
           </form>
+          <hr>
+          <button class="btn btn-outline-danger" @click="logout">Or click here to logout.</button>
         </div>
       </div>
     </div>
@@ -58,6 +60,7 @@
 
 <script>
 import { updateUser, getUser } from "@/api/auth";
+const Cookie = process.client ? require("js-cookie") : undefined;
 export default {
   name: "Settings",
   data() {
@@ -78,8 +81,18 @@ export default {
   },
   methods: {
     async handleSubmit() {
-      const res = await updateUser(this.user);
-      console.log(res);
+      try {
+        const res = await updateUser(this.user);
+        this.$router.push("/");
+      } catch (err) {
+        alert("更新失败");
+        console.log(err);
+      }
+    },
+    logout() {
+      Cookie.remove("user");
+      this.$store.commit("setUser", null);
+      this.$router.redirect("/");
     }
   }
 };
