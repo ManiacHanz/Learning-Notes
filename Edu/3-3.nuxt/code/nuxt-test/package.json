@@ -11,7 +11,9 @@
   "dependencies": {
     "axios": "^0.21.1",
     "cookieparser": "^0.1.0",
+    "dayjs": "^1.10.3",
     "js-cookie": "^2.2.1",
+    "markdown-it": "^12.0.4",
     "nuxt": "^2.14.12"
   }
 }

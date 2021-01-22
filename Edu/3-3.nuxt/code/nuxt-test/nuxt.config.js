@@ -37,6 +37,11 @@ module.exports = {
             name: "settings",
             path: "/settings",
             component: resolve(__dirname, "pages/settings/")
+          },
+          {
+            name: "editor",
+            path: "/editor/:slug",
+            component: resolve(__dirname, "pages/editor/")
           }
         ]
       });
@@ -46,5 +51,5 @@ module.exports = {
   server: {
     port: 3000 // default: 3000
   },
-  plugins: ["@/plugins/request.js"]
+  plugins: ["@/plugins/request.js", "@/plugins/date.js"]
 };

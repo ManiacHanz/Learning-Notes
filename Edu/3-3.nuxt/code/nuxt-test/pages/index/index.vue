@@ -66,7 +66,7 @@
                 }"
                   class="author"
                 >{{article.author.username}}</nuxt-link>
-                <span class="date">{{article.createdAt}}</span>
+                <span class="date">{{article.createdAt | date}}</span>
               </div>
               <button
                 class="btn btn-sm pull-xs-right"

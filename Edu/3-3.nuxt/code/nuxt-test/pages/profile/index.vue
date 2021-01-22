@@ -5,14 +5,20 @@
         <div class="container">
           <div class="row">
             <div class="col-xs-12 col-md-10 offset-md-1">
-              <img src="http://i.imgur.com/Qr71crq.jpg" class="user-img">
-              <h4>Eric Simons</h4>
-              <p>Cofounder @GoThinkster, lived in Aol's HQ for a few months, kinda looks like Peeta from the Hunger Games</p>
-              <button class="btn btn-sm btn-outline-secondary action-btn">
+              <img :src="profile.image" class="user-img">
+              <h4>{{profile.username}}</h4>
+              <p>{{profile.bio}}</p>
+              <button
+                v-if="profile.username !== user.username"
+                class="btn btn-sm btn-outline-secondary action-btn"
+              >
                 <i class="ion-plus-round"></i>
                 &nbsp;
-                Follow Eric Simons
+                Follow {{profile.username}}
               </button>
+              <nuxt-link v-else class="btn btn-sm btn-outline-secondary action-btn" to="/settings">
+                <i class="ion-gear-a"></i> Edit Profile Settings
+              </nuxt-link>
             </div>
           </div>
         </div>
@@ -32,48 +38,34 @@
               </ul>
             </div>
 
-            <div class="article-preview">
+            <div :key="item.slug" v-for="item in articles" class="article-preview">
               <div class="article-meta">
-                <a href>
-                  <img src="http://i.imgur.com/Qr71crq.jpg">
-                </a>
+                <nuxt-link :to="{name: 'profile', params: {username: item.author.username}}">
+                  <img :src="item.author.image">
+                </nuxt-link>
                 <div class="info">
-                  <a href class="author">Eric Simons</a>
-                  <span class="date">January 20th</span>
+                  <nuxt-link
+                    :to="{name: 'profile', params: {username: item.author.username}}"
+                  >{{item.author.username}}</nuxt-link>
+                  <span class="date">{{item.createAt | date}}</span>
                 </div>
                 <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                  <i class="ion-heart"></i> 29
+                  <i class="ion-heart"></i>
+                  {{item.favoritesCount}}
                 </button>
               </div>
-              <a href class="preview-link">
-                <h1>How to build webapps that scale</h1>
-                <p>This is the description for the post.</p>
-                <span>Read more...</span>
-              </a>
-            </div>
-
-            <div class="article-preview">
-              <div class="article-meta">
-                <a href>
-                  <img src="http://i.imgur.com/N4VcUeJ.jpg">
-                </a>
-                <div class="info">
-                  <a href class="author">Albert Pai</a>
-                  <span class="date">January 20th</span>
-                </div>
-                <button class="btn btn-outline-primary btn-sm pull-xs-right">
-                  <i class="ion-heart"></i> 32
-                </button>
-              </div>
-              <a href class="preview-link">
-                <h1>The song you won't ever stop singing. No matter how hard you try.</h1>
-                <p>This is the description for the post.</p>
+              <nuxt-link :to="{name: 'article',params: {slug: item.slug}}" class="preview-link">
+                <h1>{{item.title}}</h1>
+                <p>{{item.description}}</p>
                 <span>Read more...</span>
                 <ul class="tag-list">
-                  <li class="tag-default tag-pill tag-outline">Music</li>
-                  <li class="tag-default tag-pill tag-outline">Song</li>
+                  <li
+                    :key="tag"
+                    v-for="tag in item.tagList"
+                    class="tag-default tag-pill tag-outline"
+                  >{{tag}}</li>
                 </ul>
-              </a>
+              </nuxt-link>
             </div>
           </div>
         </div>
@@ -83,8 +75,31 @@
 </template>
 
 <script>
+import { mapState } from "vuex";
+import { getProfile } from "@/api/profile";
+import { getArticles } from "@/api/article";
 export default {
-  name: "Profile"
+  name: "Profile",
+  middleware: ["auth"],
+  computed: {
+    ...mapState(["user"])
+  },
+  async asyncData({ route }) {
+    const { params } = route;
+    const { username } = params;
+    const [{ profile }, { articles }] = await Promise.all([
+      getProfile(username),
+      getArticles({
+        limit: 10,
+        author: username
+      })
+    ]);
+
+    return {
+      profile,
+      articles
+    };
+  }
 };
 </script>
 
