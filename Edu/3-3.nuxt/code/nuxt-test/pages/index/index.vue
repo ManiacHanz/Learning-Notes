@@ -12,11 +12,38 @@
         <div class="col-md-9">
           <div class="feed-toggle">
             <ul class="nav nav-pills outline-active">
-              <li class="nav-item">
-                <a class="nav-link disabled" href>Your Feed</a>
+              <li v-if="hasLogin" class="nav-item">
+                <nuxt-link
+                  :to="{
+                  path: '/',
+                  query: {
+                    tab: 'personal'
+                  }
+                }"
+                  class="nav-link"
+                  :class="{'active': tab === 'personal'}"
+                >Your Feed</nuxt-link>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" href>Global Feed</a>
+                <nuxt-link
+                  :to="{
+                  path: '/',
+                }"
+                  class="nav-link"
+                  :class="{'active': !tab && !tag}"
+                >Global Feed</nuxt-link>
+              </li>
+              <li v-if="!!tag" class="nav-item">
+                <nuxt-link
+                  :to="{
+                  path: '/',
+                  query: {
+                    tag
+                  }
+                }"
+                  class="nav-link"
+                  :class="{'active': tag}"
+                ># {{tag}}</nuxt-link>
               </li>
             </ul>
           </div>
@@ -41,7 +68,11 @@
                 >{{article.author.username}}</nuxt-link>
                 <span class="date">{{article.createdAt}}</span>
               </div>
-              <button class="btn btn-outline-primary btn-sm pull-xs-right">
+              <button
+                class="btn btn-sm pull-xs-right"
+                :class="[article.favorited ?'btn-primary' :'btn-outline-primary', article.disabled? 'disabled': '']"
+                @click="favorateArt(article.slug)"
+              >
                 <i class="ion-heart"></i>
                 {{article.favoritesCount}}
               </button>
@@ -93,7 +124,8 @@
               :to="{
               path: '/', query: {
                 page: num,
-                tag: $route.query.tag
+                tag,
+                tab
               }
             }"
             >{{num}}</nuxt-link>
@@ -104,14 +136,19 @@
   </div>
 </template>
 <script>
-import { getArticles, getTags } from "@/api/article";
+import { getArticles, getTags, postFavArt, postUnFavArt } from "@/api/article";
 
 export default {
   name: "Index",
   async asyncData(context) {
+    // console.log(context);
     const {
-      route: { query }
+      route: { query },
+      store: { state }
     } = context;
+
+    const hasLogin = !!state.user;
+
     const { page = 1, tab, tag } = query;
 
     const limit = 10;
@@ -120,8 +157,8 @@ export default {
     const params = {
       limit: 10,
       offset,
-      tab,
-      tag
+      tag,
+      tab
     };
     const [articleRes, tagRes] = await Promise.all([
       getArticles(params),
@@ -137,10 +174,31 @@ export default {
       pages,
       tags: tagRes.tags,
       tab,
-      currentPage: page
+      tag,
+      currentPage: page,
+      hasLogin
     };
   },
-  watchQuery: ["page"]
+  watchQuery: ["page", "tab", "tag"],
+  methods: {
+    async favorateArt(slug) {
+      const art = this.articles.find(item => item.slug === slug);
+
+      if (art.disabled) return;
+      this.$set(art, "disabled", true);
+      const idx = this.articles.findIndex(item => item.slug === slug);
+      const req = art.favorited ? postUnFavArt : postFavArt;
+
+      try {
+        const res = await req(slug);
+        this.articles.splice(idx, 1, res.article);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        art.disabled = false;
+      }
+    }
+  }
 };
 </script>
 

@@ -76,7 +76,6 @@ export default {
   },
   async mounted() {
     const res = await getUser();
-    console.log(res);
     this.user = res.user;
   },
   methods: {
@@ -86,7 +85,7 @@ export default {
         this.$router.push("/");
       } catch (err) {
         alert("更新失败");
-        console.log(err);
+        // console.log(err);
       }
     },
     logout() {

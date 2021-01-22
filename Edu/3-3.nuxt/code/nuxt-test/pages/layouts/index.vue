@@ -5,7 +5,6 @@
         <nuxt-link class="navbar-brand" to="/">conduit</nuxt-link>
         <ul class="nav navbar-nav pull-xs-right">
           <li class="nav-item">
-            <!-- Add "active" class when you're on that page" -->
             <nuxt-link exact class="nav-link" to="/">Home</nuxt-link>
           </li>
           <li v-if="user" class="nav-item">

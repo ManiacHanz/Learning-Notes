@@ -87,7 +87,7 @@ export default {
         user: this.user
       };
       const submitHandler = this.isLogin ? login : register;
-     
+
       try {
         const res = await submitHandler(data);
 
@@ -95,7 +95,7 @@ export default {
         Cookie.set("user", res.user); // saving token in cookie for server rendering
         this.$router.push("/");
       } catch (error) {
-        console.log(error);
+        // console.log(error);
         const { errors } = error;
         if (errors) {
           this.errmsg = Object.keys(errors).reduce((pre, key) => {

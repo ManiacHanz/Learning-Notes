@@ -4,7 +4,7 @@ export const request = axios.create({
   baseURL: "https://conduit.productionready.io"
 });
 
-["post", "put"].forEach(method => {
+["post", "put", "delete"].forEach(method => {
   request[method] = props =>
     request({
       method: String.prototype.toUpperCase.call(method),
