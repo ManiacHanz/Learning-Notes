@@ -1,0 +1,51 @@
+.container {
+	width: 400px;
+	margin: 50px auto;
+	border: 1px solid #888;
+	border-radius: 4px;
+	padding: 20px;
+}
+
+.title {
+	color: rgb(38,104,151);
+	text-align: center;
+	font-size: 20px;
+	border-bottom: 1px dashed #888;
+	padding: 12px 0;
+}
+
+.info {
+	display: flex;
+	padding: 12px;
+	justify-content: space-between;
+	border-bottom: 1px dashed #888;
+}
+
+.appleItem {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin: 4px 0;
+	padding: 12px;
+}
+.eat-btn {
+	color: #fff;
+	background: lightblue;
+	padding:4px 12px ;
+	border-radius: 4px;
+	cursor: pointer;
+}
+.btn {
+	width: 100px;
+	text-align: center;
+	padding: 16px;
+	margin: 6px auto;
+	background: rgb(72,147,100);
+	color: #fff;
+	border-radius:6px;
+}
+
+.btn.disable {
+	background: rgb(187,195,196);
+	color: #fff;
+}
