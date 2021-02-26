@@ -412,6 +412,7 @@ export default function combineReducers(reducers) {
     shapeAssertionError = e
   }
 
+  // 返回的函数放在createStore中，所以有这两个参数
   return function combination(state = {}, action) {
     if (shapeAssertionError) {
       throw shapeAssertionError
@@ -436,7 +437,7 @@ export default function combineReducers(reducers) {
       const key = finalReducerKeys[i]
       // 每一个reducer 即 a b代表的函数
       const reducer = finalReducers[key]
-      // state['a']  但是不知道这里 state 从哪传进来的,应该是整个状态树？
+      // state['a'] 
       const previousStateForKey = state[key]
       // 即 执行 a 这个reducer
       const nextStateForKey = reducer(previousStateForKey, action)

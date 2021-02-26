@@ -100,3 +100,7 @@ jsx是javascript的语法糖，会转换为React.createElement函数
 * 双缓存技术
   在内存中计算构建，然后直接替换到dom
   react的alternate，即workInProgress就是用这种技术，在内存中先把需要的更新计算出来，然后直接替换
+
+
+
+react和vue diff的比较
