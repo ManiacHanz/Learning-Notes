@@ -155,3 +155,33 @@ rollup代码拆分和多入口文件不能使用iife，只能使用amd标准
 
 * husky用来使用package.json完成对.git/hooks的sh脚本编写
 * lint-stage配合husky可以完成复合指令
+
+
+### webpack流程（打包后的主代码）
+    通过ast解析模块暴露方法，使用`__webpack_require__`的挂载方法，来兼容commonjs和esModule规范，然后在递归调用`__webpack_require__`，依次打包每个依赖
+
+* `__webpack_require__`方法。用来兼容各个模块规范，返回被加载模块的内容
+
+    1. commonJs. webpack不会采用过多操作，直接替换为`__webpack_require__`方法，然后导出出来
+    2. esModule导出方式，webpack会稍作处理，把本来的exports改成自定义的`__webpack_exports__`,主要调用的`__webpack_require__.r`以及`__webpack_require__.d`方法。`__webpack_require__.r`是给`exports`对象加标记，标记`__esModule`, 在后续的使用时可以知道是`esModule`。`__webpack_require__.d`，其实就是把代码中`export {}`出来的属性，通过`Object.defineProperty(exports, prop, {enumerable: true, get: getter})`挂到`Module`下面的`exports`上面，相当于处理成了commonjs
+    3. 导入方式也会同时做兼容。比如在使用import导入commonjs规范导出的模块时，webpack也会把commonjs上通过getter使import能抓到内容
+    4. 总结就是，在esModule时，不管是导入还是导出，webpack都会进行处理，主要处理方式是对`exports`对象进行赋值及属性挂载。另外就是要兼容使用`import`方式去导入`commonJs`引入的包
+    5. 注意：以上设计到的`module`，不是`nodejs`环境中的`module`，而是在`__webpack_require__`函数声明的内部变量。`let module = { i: moduleId, l: false, exports: {} }`
+
+* import()懒加载主流程
+    1. 当前懒加载的核心原理是jsonp -- script标签
+    2. `__webpack_require__.t`方法，用的是二进制的位运算，针对内容进行不同的处理。处理主要还是针对不同规范的兼容
+    3. 懒加载魔法注解`import(/*webpackChunkName: abc*/ './abc.js').then(chunk => {})`
+    4. 懒加载的主流程，主要是通过`Promise`，先把内容放进一个`promises`数组，并且保存每一个`promise`的`resolve`方法，放进`promises`数组里。然后在读取文件内容以后，遍历调用`resolve`方法，这样就可以在then后面使用了。被动态加载的文件会编译成调用`webpackJsonpCallback`调用，也就是读取完文件内容需要改变`promise`状态
+
+### tapable
+> 可以理解成就是一个发布-订阅模式的库
+
+* 钩子准备
+    1. 分为同步和异步钩子
+    2. 普通钩子 -- 监听器之间互相独立不干扰；熔断钩子(bailhook) -- 监听返回非undefined时后续不执行；瀑布沟子(waterfallHook) -- 上一个监听的返回值可传递到下一个；循环钩子(loophook) -- 不返回false则一直执行
+
+* hook.tap
+    有点类似于各个中间件的use方法，就是组装，然后放进taps数组里
+* hook.call
+    调用这个函数的时候，会根据taps里面的内容，以及钩子的类型，利用模板拼接成一个新的匿名函数，然后调用这个匿名函数
