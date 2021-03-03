@@ -185,3 +185,70 @@ rollup代码拆分和多入口文件不能使用iife，只能使用amd标准
     有点类似于各个中间件的use方法，就是组装，然后放进taps数组里
 * hook.call
     调用这个函数的时候，会根据taps里面的内容，以及钩子的类型，利用模板拼接成一个新的匿名函数，然后调用这个匿名函数
+
+* Compiler 
+    Compiler类，其实是继承了Tapable类，同时在实例上挂载了很多tapable的钩子
+
+* webpack函数的主流程
+    1. 实例化compiler对象  `new Compiler()`
+    2. 初始化`NodeEnvironmentPlugin(compiler)`插件，让compiler具备文件读写以及监听的能力
+    3. 挂载所有的plugins插件到compiler对象身上
+    4. 挂载webpack内置的插件，比如处理入口文件的插件
+    5. 返回compiler对象
+    6. 调用compiler.run的方法
+    7. 总结：整体是一个类似于事件执行机制
+
+* 处理入口文件的内置插件 webpackOptionsApply内部的EntryOptionPlugin
+
+## webpack主流程梳理
+
+一、步骤
+    1. 实例化 compiler对象，用来贯穿整个webpack工程。`new Compiler`。Compiler类又继承自Tapable类
+    2. compiler实例执行run方法
+
+二、compiler实例化操作
+    1. compiler 继承 tapable 。是为了具备钩子的操作能力。因为webpack是一个事件流，它的工作机制主要是 监听事件 - 触发事件
+    2. 在实例化 compiler 以后，就是对compiler 实例的扩展操作。比如往上面挂载属性及添加方法。其中 NodeEnvironmentPlugin 这个关键操作，是为了让他具备文件的读写的能力。`outputSystem` `inputSystem`
+    3. 具备了文件读写能力之后，会把 option 中的plugins配置，都挂载到compiler身上
+    4. 把webpack内部的插件与compiler建立关系。其中 EntryOptionPlugin 处理了入口模块的 id，即 config 里面的 entry 属性
+    5. 在实例化 compiler 的时候只是监听了 make 钩子 (SingleEntryPlugin -- 处理入口文件的插件)
+        5.1 在 SingleEntryPlugin 模块的 apply 方法中对两个钩子进行监听（在run里面触发）
+        5.2 其中 compilation 钩子就是让 compilation 具备了利用 normalModuleFactory 工厂创建一个普通模块的能力。
+        5.3 有5.2的能力是因为编译的过程就是 compilation 需要创建一个模块来加载需要打包的模块
+        5.4 其中 make 钩子，在 compiler.run 的时候会出发，走到这里就意味着某个模块执行打包之前的所有准备工作就完成了
+        5.5 addEntry() 方法调用，就是处理入口文件的
+
+三、run 方法执行
+    1. run方法就是利用tapable去按顺序调用钩子(beforeRun run compile)。符合webpack的工作机制、
+    2. compile 方法执行( run 内部的 compile. 就是 Compiler类上的方法)
+        2.1 准备参数，返回一个params对象。其中有normalModuleFactory，用于2-5-2所说
+        2.2 触发beforeCompile钩子
+        2.3 将第一步的参数传给一个函数，开始创建一个 compilation。 同时把compiler 对象也挂载到了 compilation身上
+        2.4 在调用 newCompilation 的内部
+            - 调用了 createCompilation
+            - 触发了 this.compilation 钩子和 compilation 钩子的监听
+    3. 创建compilation对象以后就触发make 钩子
+    4. 触发make钩子监听以后就把 compilation 对象传进去。所以此时既能拿到当前处理的 compilation 对象，也能拿到贯穿始终的 compiler 对象
+
+四、总结
+    1. 实例化compiler方法。 `const compiler = webpack(require(webpack.config.js))`
+    2. 调用compiler方法
+    3. newCompilation
+    4. 实例化compilation对象，身上具有compiler
+    5. 触发make监听
+    6. make监听里有对于入口文件的处理的插件，就触发了编译流程
+
+## 编译流程
+
+整个编译过程都是有compilation实例来处理
+
+一、通过compilation里的addEntry以及addModules方法，会收集并保存模块的依赖关系
+    1. 这个收集的过程是通过解析ast，把import或者require关键声明都改成__webpack_require，并且把依赖关系明确出来
+    2. 有两个重要的属性，entries保存入口文件；modules保存所有用到的模块文件。都是扁平的1维数组
+
+二、根据收集到的入口的依赖，递归的去分析每一个模块需要的依赖及代码解析。这中间会把moduleId，moduleResource等等信息保存起来
+
+三、在make钩子里面调用afterCompiler钩子，在里面就会根据模块的依赖关系生成chunk
+    1. 有依赖关系的代码应该生成一份chunk
+    2. 里面用来辨识的moduleId应该相同
+    3. 写到磁盘指定位置
