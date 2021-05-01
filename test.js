@@ -1,63 +1,37 @@
-/*
- 实现一个flatten方法，要求
-输入[[1,2,2], [3,4,'5',5],[6,7,8,9,[11,12,[12,13,14]]],10]
-输出[1,2,2, 3,4,'5',5,6,7,8,9,11,12,12,13,14,10]
-*/
+var permute = function(nums) {
+  if(nums.length === 0) return []
 
-function flatten(input) {
-  const array = input.reduce((pre, curr) => {
-    if (Object.prototype.toString.call(curr) === "[object Array]") {
-      curr = flatten(curr);
+  // 用来记录答案
+  var res = []
+  var temp = []
+  var used = []
+  dfs(nums, res, temp, used)
+
+  function dfs(nums, res, temp) {
+    // 最终目的，得到一个和Nums一样长度的数组，就是它的一种排列
+    if(temp.length === nums.length) {
+      res.push([...temp])
+      return
     }
-    return pre.concat(curr);
-  }, []);
-  return array;
-}
 
-const input = [
-  [1, 2, 2],
-  [3, 4, "5", 5],
-  [6, 7, 8, 9, [11, 12, [12, 13, 14]]],
-  10
-];
+    // 遍历nums里面去取节点
+    for(var i =0; i < nums.length; i++) {
+      // 如果有重复判断，就跳过主逻辑
+      if(used[i]) continue
+      used[i] = true
+      // 直接的逻辑，但是不用used会包括重复结构
+      temp.push(nums[i])
+      dfs(nums, res, temp)
+      temp.pop()
 
-console.log(flatten(input));
-
-
-
-/* 
-  实现一个好桉树，判断两个变量的值是否相等
-  注意：数据类型不限于示例，尽可能考虑边界
-
- 
-*/
-
-const foo1 = {
-  a: 1,
-  b: '1',
-  c: NaN,
-  d: [{
-    a:1,
-    b:2
-  }],
-  f: {
-    a:1
+      used[i] = false
+    }
+    return 
   }
-}
 
+  return res
+};
 
-const foo2 = {
-  a: 1,
-  b: '1',
-  c: NaN,
-  d: [{
-    a:1,
-  }],
-  f: {
-    a:1
-  }
-}
+console.log(permute([1,2,3]))
 
-function isEqual(target1, target2) {}
-
-console.log(isEqual(target1, target2))
+// [ [1,2,3], [1,3,2] ....  ]

@@ -1,0 +1,17 @@
+.trans {
+  transition: all ;
+}
+
+@keyframes tra {
+  0% {
+    left: 0;
+  }
+  100% {
+    left: 100px;
+  }
+}
+
+.b {
+  animation: tra 2s;
+}
+
