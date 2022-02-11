@@ -57,7 +57,7 @@
     "gulp-swig": "^0.9.1",
     "gulp-uglify": "^3.0.2",
     "gulp-useref": "^5.0.0",
-    "node-sass": "^5.0.0"
+    "node-sass": "^7.0.0"
   },
   "engines": {
     "node": ">=6"
