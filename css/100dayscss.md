@@ -22,3 +22,7 @@
 ```css
 text-transform: uppercase;
 ```
+
+### Day 3
+
+1. [clip-path](https://developer.mozilla.org/en-US/docs/Web/CSS/clip-path) 可以理解成一个蒙版，决定一个元素按照什么形状来展示。
