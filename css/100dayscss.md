@@ -30,3 +30,50 @@ text-transform: uppercase;
 ### Day 4
 
 1. [animation-fill-mode](https://segmentfault.com/q/1010000003867335) 决定动画开始之前/结束之后维持的状态
+
+### Day 5
+
+1. 记录一种泛类名选择器
+
+```html
+<div class="points">
+  <div class="point-1">
+    <div class="tooltip">458</div>
+  </div>
+  <div class="point-2">
+    <div class="tooltip">812</div>
+  </div>
+  <div class="point-3">
+    <div class="tooltip">746</div>
+  </div>
+  <div class="point-4">
+    <div class="tooltip">877</div>
+  </div>
+  <div class="point-5">
+    <div class="tooltip">517</div>
+  </div>
+  <div class="point-6">
+    <div class="tooltip">434</div>
+  </div>
+  <div class="point-7">
+    <div class="tooltip">458</div>
+  </div>
+</div>
+```
+
+```scss
+[class^="point-"] {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  z-index: 10;
+
+  &:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+```
