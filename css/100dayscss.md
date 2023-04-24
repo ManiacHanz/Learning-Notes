@@ -26,3 +26,7 @@ text-transform: uppercase;
 ### Day 3
 
 1. [clip-path](https://developer.mozilla.org/en-US/docs/Web/CSS/clip-path) 可以理解成一个蒙版，决定一个元素按照什么形状来展示。
+
+### Day 4
+
+1. [animation-fill-mode](https://segmentfault.com/q/1010000003867335) 决定动画开始之前/结束之后维持的状态
