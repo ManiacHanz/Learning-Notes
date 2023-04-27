@@ -77,3 +77,40 @@ text-transform: uppercase;
   }
 }
 ```
+
+### Day 6
+
+1. 通过 `border-color` 分开设置达到透明 3/4 圆的效果
+
+```css
+.circle-1 {
+  position: absolute;
+  box-sizing: border-box;
+  width: 76px;
+  height: 76px;
+  top: -3px;
+  left: -3px;
+  border-width: 1px;
+  border-style: solid;
+  border-color: $brown $brown $brown transparent; /* here */
+  border-radius: 50%;
+  transition: all 1.5s ease-in-out;
+}
+```
+
+### Day 7
+
+1. 通过 `pointer-events` 来隐藏一些样式的默认鼠标样式， MDN，比如 Input 框鼠标会变成输入光标的形状
+
+```scss
+input {
+  opacity: 0;
+  pointer-events: none;
+  &.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+```
+
+2. `box-shadow`不仅可以理解成阴影，也可以理解成`border`外的另一层 border 来使用
