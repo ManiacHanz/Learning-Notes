@@ -114,3 +114,75 @@ input {
 ```
 
 2. `box-shadow`不仅可以理解成阴影，也可以理解成`border`外的另一层 border 来使用
+
+### Day 8
+
+1. `filter: blur(Xpx)` 滤镜属性
+
+2. scss 循环语法 [sass doc](https://sass-lang.com/documentation/at-rules/control/for)
+
+```scss
+@for $i from 1 through 10 {
+  .blubb-#{$i} {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 50px;
+    height: 50px;
+    transform: rotate((random(300)) + deg);
+
+    &:after {
+      position: absolute;
+      display: block;
+      content: "";
+      width: 50px;
+      height: 50px;
+      background: #fff;
+      border-radius: 50%;
+      transform-origin: (40 - $i * 3) + px (40 - $i * 3) + px;
+      animation: rotate (2.5 + $i / 5) + s ease-in-out ($i / 5) + s infinite;
+      filter: blur(5px);
+    }
+  }
+}
+```
+
+### Day 9
+
+1. scss 继承 `@extend` [scss doc extend](https://sass-lang.com/documentation/at-rules/extend)
+
+```scss
+.crater-1 {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  top: 9px;
+  left: 28px;
+  border-radius: 10px;
+  background: #ece1a8;
+}
+
+.crater-2 {
+  @extend .crater-1;
+  top: 12px;
+  left: 0;
+}
+```
+
+2. `random` 随机数方法
+
+3. 挺有意思的雨滴动画. 兼具位置和形变
+
+```scss
+@keyframes drop {
+  0% {
+    transform: translate3d(40px, -320px, 0) scaleX(1) scaleY(1) rotate(17deg);
+  }
+  85% {
+    transform: translate3d(0, 0, 0) scaleX(1) scaleY(1) rotate(17deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scaleX(3) scaleY(0) rotate(0deg);
+  }
+}
+```
