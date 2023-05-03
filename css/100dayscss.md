@@ -186,3 +186,57 @@ input {
   }
 }
 ```
+
+### Day 10
+
+1. 利用 15 个正方形画一个钟的 60 个刻度。即 15 个正方形每个逐渐 rotate 360/60 \* index 的角度。然后用四个边的中点（或者四个角，宽度不同）来作为刻度，组成一个时钟的 60 个刻度
+
+2. 时钟圈的 svg `<circle>` 线条
+
+```html
+<svg class="spinner" viewbox="0 0 202 202" xlmns="https://www.w3.org/2000/svg">
+  <circle cx="101" cy="101" r="99.5"></circle>
+</svg>
+```
+
+3. 时钟圈的动画。 注意`50.001%`这个翻转，让动画显得流畅
+
+```scss
+$speed: 5s; // 60s for realtime
+.spinner {
+  position: absolute;
+  width: 202px;
+  height: 202px;
+  border-radius: 50%;
+  top: 5px;
+  left: 5px;
+
+  circle {
+    stroke: #f85b5b;
+    stroke-width: 3;
+    fill: none;
+    stroke-dasharray: 625;
+    animation: spinner $speed linear infinite;
+    transform-origin: center center;
+    transform: rotate(-90deg);
+  }
+}
+
+@keyframes spinner {
+  from {
+    stroke-dashoffset: 625;
+    transform: rotate(-90deg) scaleY(1);
+  }
+  50% {
+    stroke-dashoffset: 0;
+    transform: rotate(-90deg) scaleY(1);
+  }
+  50.001% {
+    transform: rotate(-90deg) scaleY(-1);
+  }
+  to {
+    stroke-dashoffset: 625;
+    transform: rotate(-90deg) scaleY(-1);
+  }
+}
+```
