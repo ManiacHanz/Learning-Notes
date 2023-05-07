@@ -240,3 +240,42 @@ $speed: 5s; // 60s for realtime
   }
 }
 ```
+
+### Day 11
+
+1. 利用两种动画重叠来模拟鞋子走路等复杂动画
+
+```scss
+.right {
+  animation: leg-swing 2s ease-in-out 1s infinite;
+
+  .shoe {
+    animation: shoe-turn 2s ease-in-out 1s infinite;
+  }
+}
+
+@keyframes leg-swing {
+  0%,
+  100% {
+    transform: rotate(-22deg);
+  }
+  50% {
+    transform: rotate(40deg);
+  }
+}
+@keyframes shoe-turn {
+  0%,
+  100% {
+    transform: rotate(-10deg) translateY(-5px) translateX(10px);
+  }
+  25% {
+    transform: rotate(0deg) translateY(0px) translateX(0);
+  }
+  50% {
+    transform: rotate(10deg) translateY(-10px) translateX(10px);
+  }
+  75% {
+    transform: rotate(0deg) translateY(-30px) translateX(0);
+  }
+}
+```
