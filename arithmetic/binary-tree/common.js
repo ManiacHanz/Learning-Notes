@@ -28,7 +28,24 @@ function arrToTree(arr) {
   return head;
 }
 
+function inorderTreeToArray(root) {
+  if (!root) return [];
+  const array = [];
+
+  function traversal(node) {
+    if (!node) return;
+
+    traversal(node.left);
+    array.push(node.val);
+    traversal(node.right);
+  }
+
+  traversal(root);
+  return array;
+}
+
 module.exports = {
   TreeNode,
   arrToTree,
+  inorderTreeToArray,
 };
