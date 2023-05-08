@@ -279,3 +279,33 @@ $speed: 5s; // 60s for realtime
   }
 }
 ```
+
+### Day 12
+
+1. `backface-visibility` 关于透视背面的显示与否
+
+### Day 13
+
+1. 通过 `before`和`after`两个伪元素构建横平竖直，来凑齐一个十字
+
+```scss
+&:before {
+  position: absolute;
+  content: "";
+  width: 14px;
+  height: 2px;
+  top: 24px;
+  left: 18px;
+  background: #fff;
+}
+
+&:after {
+  position: absolute;
+  content: "";
+  width: 2px;
+  height: 14px;
+  top: 18px;
+  left: 24px;
+  background: #fff;
+}
+```
