@@ -309,3 +309,17 @@ $speed: 5s; // 60s for realtime
   background: #fff;
 }
 ```
+
+### Day 15
+
+1. 通过`dragover`增加拖拽的样式名
+
+2. `box-shadow`可以多层使用 [MDN](https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow)
+
+```scss
+.hover {
+  box-shadow: 0 2px 0 0 #498c25, 0 2px 10px 0 #6ece3b;
+}
+```
+
+3. 通过`transform`来改变进度条长度
