@@ -323,3 +323,11 @@ $speed: 5s; // 60s for realtime
 ```
 
 3. 通过`transform`来改变进度条长度
+
+### Day 16
+
+1. 多个`@keyframes`的组合。顺序可以用两种方式来决定
+   1. 通过 animation 里面的`delay`属性，计算延迟。但是这种情况实现洋葱圈动画可能需要有多个 animation 的值用`','`链接
+   2. 通过所有动画使用相同的`duration`值，然后在 `@keyframe`里通过`'%'`来控制
+
+### Day 17
