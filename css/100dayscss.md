@@ -331,3 +331,24 @@ $speed: 5s; // 60s for realtime
    2. 通过所有动画使用相同的`duration`值，然后在 `@keyframe`里通过`'%'`来控制
 
 ### Day 17
+
+### Day 18
+
+1. `transform-style: preserve-3d` 设置子元素位于 3D 空间中 [mdn](https://developer.mozilla.org/zh-CN/docs/Web/CSS/transform-style)
+
+2. 利用一个原型的 3d 翻转，来达到橡皮筋回弹的效果
+
+### Day 19
+
+1. 通过 css 属性控制 input 被选中时的样式. 同时隐藏 input 元素，就可以处理 label 的问题
+
+```scss
+#check-1:checked ~ .active {
+}
+```
+
+2. 仅用 css 就实现了一个 Radio 的效果，或者说是轮播下标的效果
+
+### Day 20
+
+1. 使用 svg 的线条动画来做好看的线条变换，同时一个 svg 图案可以使用多个线条拼凑起来，在处理动画的时候就会有多个点同时移动
