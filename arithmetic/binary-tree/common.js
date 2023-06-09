@@ -47,8 +47,37 @@ function inorderTreeToArray(root) {
   return array;
 }
 
+function treeToArray(root) {
+  const queue = [];
+  const result = [];
+  queue.push(root);
+  while (queue.length > 0) {
+    const item = queue.shift();
+    queue.push(item.left);
+    queue.push(item.right);
+    result.push(item.val);
+  }
+  return result;
+}
+
+function sortedArrayToBST(array) {
+  function getNode(array) {
+    if (!array.length) return null;
+
+    const midIndex = Math.floor(array.length / 2);
+    const node = new TreeNode(array[midIndex]);
+    node.left = getNode(array.slice(0, midIndex));
+    node.right = getNode(array.slice(midIndex + 1));
+    return node;
+  }
+
+  return getNode(array);
+}
+
 module.exports = {
   TreeNode,
   arrToTree,
+  treeToArray,
   inorderTreeToArray,
+  sortedArrayToBST,
 };
