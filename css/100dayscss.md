@@ -352,3 +352,38 @@ $speed: 5s; // 60s for realtime
 ### Day 20
 
 1. 使用 svg 的线条动画来做好看的线条变换，同时一个 svg 图案可以使用多个线条拼凑起来，在处理动画的时候就会有多个点同时移动
+
+### Day 21
+
+1. svg 的几个属性
+
+   - `stroke-dasharray`可以控制实现和虚线的长度
+   - `stroke-width`配合高度可以变成正圆或者椭圆
+   - `stroke-linecap` 控制路径两端的形状
+
+2. 强大的 svg 配合帧动画，实现的吃动人张嘴的动画
+
+3. 原型的使用 `stroke-dasharray` 切割，属性值可以使用 `n*3.14`来处理。比如 `stroke-dasharray: 5 * 3.14`
+
+### Day 22
+
+> 一个环形进度条的实现
+
+```html
+<svg>
+  <!-- 这个是控制环形背景的circle -->
+  <circle class="bg" cx="57" cy="57" r="52" />
+  <!-- 这个是控制上层图案的进度条，也就是指示多少进度的 -->
+  <circle class="progress" cx="57" cy="57" r="52" />
+</svg>
+```
+
+几个重要的属性
+
+- circle 元素 `fill:none`就可实现环
+- `stroke-dasharray`实现环虚线，这里有圆的周长求解公式 `2 * Pi * 半径`
+- 由于在环中 `stroke-dasharray`的起始是在右边，所以需要 transform 旋转 90°
+- 这里的环形控制进度条是通过设置 `storke-dasharray`满圆，然后通过`stroke-offset`偏移，把虚线偏移过来实现的。其实也可以直接计算`stroke-dasharray`不过这样就要设置第二个虚线值为满圆，才避免漏
+- `stroke-linecap`记住设置成`round`保证圆头
+
+svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaocheng/201504141680.html)
