@@ -387,3 +387,11 @@ $speed: 5s; // 60s for realtime
 - `stroke-linecap`记住设置成`round`保证圆头
 
 svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaocheng/201504141680.html)
+
+### Day 23
+
+1. animation 中的 `steps`属性。 见[张鑫旭的 blog](https://www.zhangxinxu.com/wordpress/2018/06/css3-animation-steps-step-start-end/)。执行动画中的某一段。需要深入理解
+
+2. `transform-origin`用于直线也可以指示一个线段从哪端伸缩
+
+3. 注意延迟动画有时候一开始的效果不如意，一定记得用 `animation-fill-mode`来处理
