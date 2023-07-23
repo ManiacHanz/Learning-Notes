@@ -395,3 +395,13 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 2. `transform-origin`用于直线也可以指示一个线段从哪端伸缩
 
 3. 注意延迟动画有时候一开始的效果不如意，一定记得用 `animation-fill-mode`来处理
+
+### Day 24
+
+1. 再次复习，不适用 js 的情况下如何通过点击更换元素状态 -- 使用隐藏的 radio/checkbox 配合显示的 label 标签做动画
+
+2. 复习，使用 svg 的`stroke-dashoffset`和`stroke-dasharray`配合完成动画
+
+### Day 25
+
+1. `transform: perspective()` 这个属性。控制的是离镜头的远近，这里配合 Y 轴旋转让旋转看起来更加明显
