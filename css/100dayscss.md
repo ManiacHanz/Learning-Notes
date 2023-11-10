@@ -405,3 +405,9 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 ### Day 25
 
 1. `transform: perspective()` 这个属性。控制的是离镜头的远近，这里配合 Y 轴旋转让旋转看起来更加明显
+2. `transform: scale(1) translate3d(0,0,0)` 即使只有尺寸的变化，也可以加上`translate3d`来提升性能
+
+### Day 26
+
+1. `$('.card:nth-child(' + active + ')').removeClass('active').addClass('inactive');` jq 也可以这样类似于 css 的选择去选择元素
+2. `animation` 的值是 `fadeOut`的时候，可以配合 `animate-fill-mode`来保持元素淡出之后/淡出之前的状态
