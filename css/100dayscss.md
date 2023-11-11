@@ -411,3 +411,12 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 
 1. `$('.card:nth-child(' + active + ')').removeClass('active').addClass('inactive');` jq 也可以这样类似于 css 的选择去选择元素
 2. `animation` 的值是 `fadeOut`的时候，可以配合 `animate-fill-mode`来保持元素淡出之后/淡出之前的状态
+
+### Day 27
+
+1. svg 的 `stroke-dashoffset` 用来画 svg 的路径动画
+
+### Day 28
+
+1. 用 `transform: rotate`来实现铃铛摇晃的效果
+2. 弧线的声浪效果其实就是简单的缩放和淡出的效果
