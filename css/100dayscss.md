@@ -420,3 +420,14 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 
 1. 用 `transform: rotate`来实现铃铛摇晃的效果
 2. 弧线的声浪效果其实就是简单的缩放和淡出的效果
+
+### Day 29
+
+### Day 30
+
+1. 仍然是通过 `stroke-dasharray` 和 `stroke-dashoffset` 绘制的 svg 路径动画。
+
+### Day 31
+
+1. 一列的小点只通过 `transform3D` 在 x 轴进行不同距离的移动，就能创造出 3d 圆柱转圈的效果，妙
+2. 需要 scss 写循环的时候可以来参考下语法
