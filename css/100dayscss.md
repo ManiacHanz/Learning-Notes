@@ -431,3 +431,13 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 
 1. 一列的小点只通过 `transform3D` 在 x 轴进行不同距离的移动，就能创造出 3d 圆柱转圈的效果，妙
 2. 需要 scss 写循环的时候可以来参考下语法
+
+### Day 32
+
+1. 一个简单但是看起来很不错的数字变化效果。其实是分别领用了两个数字，就是有时候看起来应该用一个元素但是达不到动画效果的时候，可以把思路放开，试试两个或多个元素效果叠加
+
+### Day 33
+
+1. `animation-direction` 可以使用 `alternate` 在每一次结束以后，改变动画的方向
+
+2. https://codepen.io/Luiz-Henrique-Menosso/pen/vYvbONm 这个大神的这个效果有点酷
