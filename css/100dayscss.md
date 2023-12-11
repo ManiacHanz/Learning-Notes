@@ -441,3 +441,12 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 1. `animation-direction` 可以使用 `alternate` 在每一次结束以后，改变动画的方向
 
 2. https://codepen.io/Luiz-Henrique-Menosso/pen/vYvbONm 这个大神的这个效果有点酷
+
+### Day 34
+
+1. `stroke-dashoffset` 的 svg 路径动画
+
+### Day 35
+
+1. 依旧是利用 svg 的路径动画做出的 loading 效果
+2. 一个是可以学习 svg 下直接用两个 circle 来表示底圆和 loading 的圆，第二个是学习利用 svg 路径动画配合 transform rotate 达到一个 1+1 > 2 的效果。一个不错的 Loading，可以用在平时
