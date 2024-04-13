@@ -465,3 +465,9 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 
 1. `animation-play-state: paused` 可以用来暂停动画
 2. 通过循环变量设置 `animation-delay` 造成动画延迟的效果形成视差
+
+### Day 45
+
+1. 边框的动画不是使用 border，而是使用 svg 和文字定位处理的
+2. svg 的背景动画用 `svg` 的 `fill`填充色变化来处理，这里也会经过 `transition` 过渡来变化
+3. 边框的变化是通过 `stroke-dasharray` (或者 `stroke-offset`)来完成
