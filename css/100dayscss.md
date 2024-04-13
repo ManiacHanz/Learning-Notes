@@ -450,3 +450,18 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 
 1. 依旧是利用 svg 的路径动画做出的 loading 效果
 2. 一个是可以学习 svg 下直接用两个 circle 来表示底圆和 loading 的圆，第二个是学习利用 svg 路径动画配合 transform rotate 达到一个 1+1 > 2 的效果。一个不错的 Loading，可以用在平时
+
+### Day 36 - 40
+
+### Day 41
+
+1. 一个简单的 bump 效果，scale 先大再小
+
+### Day 43
+
+1. 灯泡效果。这里有一个是 svg 的 fill 过渡，一个是定位的元素通过背景和阴影变成的一个发光的效果
+
+### Day 44
+
+1. `animation-play-state: paused` 可以用来暂停动画
+2. 通过循环变量设置 `animation-delay` 造成动画延迟的效果形成视差
