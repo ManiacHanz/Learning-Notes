@@ -475,3 +475,11 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 ### Day 46
 
 1. 这个动效没什么特别的，不过可以学习的是，他如何快速是用`scss`和`html(slim)`，使用循环来快速渲染和计算位置和角度，达到动画效果
+
+### Day 48
+
+1. 关于 css 渲染 3d 图形的一些属性
+
+- [perspective](https://developer.mozilla.org/zh-CN/docs/Web/CSS/perspective) 关于 3D 视角离 Z 平面的距离
+- [transform-style](https://developer.mozilla.org/zh-CN/docs/Web/CSS/transform-style) 设置元素的子元素是位于 3D 空间中还是平面中.
+  如果选择平面(`flat`)，元素的子元素将不会有 3D 的遮挡关系。
