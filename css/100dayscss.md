@@ -471,3 +471,7 @@ svg 如何实现渐变 [参考](http://www.htmleaf.com/ziliaoku/qianduanjiaochen
 1. 边框的动画不是使用 border，而是使用 svg 和文字定位处理的
 2. svg 的背景动画用 `svg` 的 `fill`填充色变化来处理，这里也会经过 `transition` 过渡来变化
 3. 边框的变化是通过 `stroke-dasharray` (或者 `stroke-offset`)来完成
+
+### Day 46
+
+1. 这个动效没什么特别的，不过可以学习的是，他如何快速是用`scss`和`html(slim)`，使用循环来快速渲染和计算位置和角度，达到动画效果
